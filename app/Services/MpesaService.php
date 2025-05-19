@@ -41,49 +41,53 @@ class MpesaService
         return null;
     }
 
-    public function stkPush($amount, $phone, $accountReference = "N/A", $transactionDesc)
-    {
-        $timestamp = Carbon::now()->format('YmdHis');
-        $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
+public function stkPush($amount, $phone, $transactionDesc, $accountReference = "N/A")
+{
+    $timestamp = Carbon::now()->format('YmdHis');
+    $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
 
-        $payload = [
-            "BusinessShortCode" => $this->shortcode,
-            "Password" => $password,
-            "Timestamp" => $timestamp,
-            "TransactionType" => "CustomerPayBillOnline",
-            "Amount" => $amount,
-            "PartyA" => $phone,
-            "PartyB" => env(key: 'MPESA_SHORTCODE'),
-            "PhoneNumber" => $phone,
-            "CallBackURL" => route(name: 'stk.callback'),
-            "AccountReference" => $accountReference,
-            "TransactionDesc" => $accountReference,
-        ];
+    $payload = [
+        "BusinessShortCode" => $this->shortcode,
+        "Password" => $password,
+        "Timestamp" => $timestamp,
+        "TransactionType" => "CustomerPayBillOnline",
+        "Amount" => $amount,
+        "PartyA" => $phone,
+        "PartyB" => $this->shortcode,
+        "PhoneNumber" => $phone,
+        "CallBackURL" => route('stk.callback', [], true),
+        "AccountReference" => $accountReference,
+        "TransactionDesc" => $transactionDesc,
+    ];
 
-        $token = $this->getAccessToken();
+    $token = $this->getAccessToken();
 
-        if (!$token) {
-            return [
-                'success' => false,
-                'message' => 'Failed to get access token'
-            ];
-        }
-
-        $response = Http::withToken($token)
-            ->post($this->baseUrl . '/mpesa/stkpush/v1/processrequest', $payload);
-
-        if ($response->successful()) {
-            return [
-                'success' => true,
-                'data' => $response->json()
-            ];
-        }
-
-        Log::error('STK Push failed: ' . $response->body());
+    if (!$token) {
+        Log::error('Failed to fetch M-Pesa token');
         return [
             'success' => false,
-            'message' => 'STK Push failed',
-            'response' => $response->json()
+            'message' => 'Failed to get access token'
         ];
     }
+
+    $response = Http::withToken($token)
+        ->post($this->baseUrl . '/mpesa/stkpush/v1/processrequest', $payload);
+
+    Log::info('M-Pesa STK Push request payload:', $payload);
+    Log::info('M-Pesa STK Push response:', $response->json());
+
+    if ($response->successful()) {
+        return [
+            'success' => true,
+            'data' => $response->json()
+        ];
+    }
+
+    Log::error('STK Push failed: ' . $response->body());
+    return [
+        'success' => false,
+        'message' => 'STK Push failed',
+        'response' => $response->json()
+    ];
+}
 }
