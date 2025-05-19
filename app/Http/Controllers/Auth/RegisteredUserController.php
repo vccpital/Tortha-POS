@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
+use Illuminate\View\View;
+
+class RegisteredUserController extends Controller
+{
+    public function create(): View
+    {
+        return view('auth.register'); // Make sure this view exists in resources/views/auth/register.blade.php
+    }
+    /**
+     * Handle an incoming registration request.
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     */
+public function store(Request $request): RedirectResponse
+{
+    $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'usertype' => ['required', 'string', 'in:devadmin,admin,cashier,user'],
+        'phone_number' => ['required', 'string', 'max:15'],
+        'status' => ['required', 'string', 'in:active,inactive,suspended'],
+        'store_id' => ['nullable', 'exists:stores,id'],
+    ]);
+
+    // Extra check: if usertype is 'admin', store_id must be null
+    if ($request->usertype === 'admin' && $request->store_id !== null) {
+        return back()->withErrors([
+            'store_id' => 'Admins should not be associated with any store.',
+        ])->withInput();
+    }
+
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'usertype' => $request->usertype,
+        'phone_number' => $request->phone_number,
+        'status' => $request->status,
+        'store_id' => $request->store_id,
+    ]);
+
+    event(new Registered($user));
+    Auth::login($user);
+
+    return redirect(route('dashboard', absolute: false));
+}
+
+}
