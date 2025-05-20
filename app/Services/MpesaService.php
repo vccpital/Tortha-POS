@@ -8,40 +8,42 @@ use Carbon\Carbon;
 
 class MpesaService
 {
-    protected $baseUrl;
-    protected $shortcode;
-    protected $passkey;
-    protected $consumerKey;
-    protected $consumerSecret;
-    protected $callbackUrl;
+protected $baseUrl;
+protected $shortcode;
+protected $passkey;
+protected $consumerKey;
+protected $consumerSecret;
+protected $callbackUrl;
 
-    public function __construct()
-    {
-        $this->baseUrl = env('MPESA_BASE_URL', 'https://sandbox.safaricom.co.ke');
-        $this->shortcode = env('MPESA_SHORTCODE');
-        $this->passkey = env('MPESA_PASSKEY');
-        $this->consumerKey = env('MPESA_CONSUMER_KEY');
-        $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
-        $this->callbackUrl = env('MPESA_CALLBACK_URL');
+public function __construct()
+{
+    $this->baseUrl = env('MPESA_ENV') == 'production'
+        ? "https://api.safaricom.co.ke"
+        : "https://sandbox.safaricom.co.ke";
+
+    $this->shortcode = env('MPESA_SHORTCODE');
+    $this->passkey = env('MPESA_PASSKEY');
+    $this->consumerKey = env('MPESA_CONSUMER_KEY');
+    $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
+    $this->callbackUrl = env('MPESA_CALLBACK_URL');
+}
+
+public function getAccessToken()
+{
+    $url = $this->baseUrl . '/oauth/v1/generate?grant_type=client_credentials';
+
+    $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)->get($url);
+
+    if ($response->successful()) {
+        return $response->json()['access_token'];
     }
 
-    public function getAccessToken()
-    {
-        $url = $this->baseUrl . '/oauth/v1/generate?grant_type=client_credentials';
+    Log::error('Failed to fetch M-Pesa token: ' . $response->body());
+    return null;
+}
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . base64_encode("{$this->consumerKey}:{$this->consumerSecret}")
-        ])->get($url);
 
-        if ($response->successful()) {
-            return $response->json()['access_token'];
-        }
-
-        Log::error('Failed to fetch M-Pesa token: ' . $response->body());
-        return null;
-    }
-
-public function stkPush($amount, $phone, $transactionDesc, $accountReference = "N/A")
+public function stkPush($amount, $phone, $transactionDesc, $accountReference)
 {
     $timestamp = Carbon::now()->format('YmdHis');
     $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
