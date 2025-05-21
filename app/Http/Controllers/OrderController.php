@@ -8,13 +8,42 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\MpesaTransaction;
 use App\Services\MpesaService;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    public function index() {
-        $orders = Order::with(['items', 'cashier', 'customer'])->get();
-        return view('orders.index', compact('orders'));
+
+public function index(Request $request)
+{
+    $user = Auth::user();
+    $filter = $request->get('filter'); // e.g., 'my' or 'all'
+
+    if ($user->usertype === 'user') {
+        // Regular users see only their orders
+        $orders = Order::with(['items', 'cashier', 'customer'])
+            ->where('customer_id', $user->id)
+            ->get();
+    } elseif ($user->usertype === 'cashier') {
+        $query = Order::with(['items', 'cashier', 'customer'])
+            ->where('store_id', $user->store_id);
+
+        // If filter is set to 'my', show only the cashier's own orders
+        if ($filter === 'my') {
+            $query->where('cashier_id', $user->id);
+        }
+
+        $orders = $query->get();
+    } elseif (in_array($user->usertype, ['admin', 'devadmin'])) {
+        // Admins and devadmins see all orders
+        $orders = Order::with(['items', 'cashier', 'customer', 'store'])->get();
+    } else {
+        // Default: no access
+        $orders = collect();
     }
+
+    return view('orders.index', compact('orders'));
+}
+
 
     public function show(Order $order) {
         $order->load(['items', 'cashier', 'customer']);

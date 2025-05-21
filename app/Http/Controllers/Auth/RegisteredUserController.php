@@ -35,13 +35,6 @@ public function store(Request $request): RedirectResponse
         'store_id' => ['nullable', 'exists:stores,id'],
     ]);
 
-    // Extra check: if usertype is 'admin', store_id must be null
-    if ($request->usertype === 'admin' && $request->store_id !== null) {
-        return back()->withErrors([
-            'store_id' => 'Admins should not be associated with any store.',
-        ])->withInput();
-    }
-
     $user = User::create([
         'name' => $request->name,
         'email' => $request->email,

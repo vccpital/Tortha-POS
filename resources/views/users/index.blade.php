@@ -137,4 +137,11 @@
         });
     </script>
     @endif
+    @if (!in_array(Auth::user()->usertype, ['devadmin', 'admin']))
+    <div class="alert alert-warning col-auto p-2 fw-bold">
+        You do not have the necessary permissions to perform this action.
+    </div>
+    @endif
+
+
 </x-app-layout>

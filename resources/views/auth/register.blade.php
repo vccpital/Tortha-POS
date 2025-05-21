@@ -49,7 +49,7 @@
 
     function toggleStoreField() {
         const type = usertypeSelect.value;
-        if (type === 'admin' || type === 'devadmin') {
+        if (type === 'user' || type === 'devadmin') {
             storeField.style.display = 'none';
         } else {
             storeField.style.display = 'block';

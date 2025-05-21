@@ -10,6 +10,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\MpesaTransactionController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -40,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/mpesa/callback', [OrderController::class, 'callback'])->name('stk.callback');
 
     Route::resource('scans', ScanController::class);
+    Route::resource('mpesa_transactions', MpesaTransactionController::class);
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
