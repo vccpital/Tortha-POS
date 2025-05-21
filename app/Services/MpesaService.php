@@ -17,14 +17,18 @@ protected $callbackUrl;
 
 public function __construct()
 {
+    $this->consumerKey = env('MPESA_CONSUMER_KEY');
+    $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
+
+    if (!$this->consumerKey || !$this->consumerSecret) {
+        Log::error('Missing M-Pesa consumer key or secret');
+    }
     $this->baseUrl = env('MPESA_ENV') == 'production'
         ? "https://api.safaricom.co.ke"
         : "https://sandbox.safaricom.co.ke";
 
     $this->shortcode = env('MPESA_SHORTCODE');
     $this->passkey = env('MPESA_PASSKEY');
-    $this->consumerKey = env('MPESA_CONSUMER_KEY');
-    $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
     $this->callbackUrl = env('MPESA_CALLBACK_URL');
 }
 
