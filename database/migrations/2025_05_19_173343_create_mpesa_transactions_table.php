@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('checkoutRequestId')->nullable();
             $table->string('mpesaReceiptNumber')->nullable();
             $table->string('phoneNumber')->nullable();
-            $table->decimal('amount', 10, 2)->nullable();
+            $table->integer('amount')->nullable();
             $table->dateTime('transactionDate');
             $table->timestamps();
 

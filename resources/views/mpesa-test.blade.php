@@ -21,7 +21,7 @@
             {{-- Optionally let user enter amount, or use order total --}}
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount (KES)</label>
-                <input type="number" name="amount" class="form-control" value="{{ $order->total }}" required>
+                <input type="number" name="amount" class="form-control" step="1" min="1" value="{{ (int) $order->total }}" required>
             </div>
 
             <button type="submit" class="btn btn-success">Pay Now</button>
