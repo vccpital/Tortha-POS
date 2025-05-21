@@ -20,7 +20,9 @@ class MpesaService
         $this->consumerKey = env('MPESA_CONSUMER_KEY') ?? 'HDneqBCVa3PAJTTeTTY85tWtQ7D8o4kdHCws8Ap2CPrAtOfA';
         $this->consumerSecret = env('MPESA_CONSUMER_SECRET') ?? 'OxAI6eXA8ek3gxHzQfADAQ8xAiDtODgAY5H8rBHsZqW0S1pXGOAlLfpXVkwfrD3c';
         $this->shortcode = env('MPESA_SHORTCODE') ?? '174379';
-        $this->passkey = env('MPESA_PASSKEY' ?? 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919');
+        $this->passkey = env('MPESA_PASSKEY', 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919');
+        $this->callbackUrl = env('MPESA_CALLBACK_URL', 'tortha-pos-main-in9aaq.laravel.cloud');
+
 
         if (!$this->consumerKey || !$this->consumerSecret) {
             Log::error('Missing M-Pesa consumer key or secret');
@@ -28,7 +30,6 @@ class MpesaService
         $this->baseUrl = env('MPESA_ENV') == 'production'
             ? "https://api.safaricom.co.ke"
             : "https://sandbox.safaricom.co.ke";
-        $this->callbackUrl = env('MPESA_CALLBACK_URL');
     }
 
     public function getAccessToken()
