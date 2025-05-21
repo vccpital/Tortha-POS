@@ -19,7 +19,7 @@ public function __construct()
 {
     $this->consumerKey = env('MPESA_CONSUMER_KEY') ?? 'HDneqBCVa3PAJTTeTTY85tWtQ7D8o4kdHCws8Ap2CPrAtOfA';
     $this->consumerSecret = env('MPESA_CONSUMER_SECRET') ?? 'OxAI6eXA8ek3gxHzQfADAQ8xAiDtODgAY5H8rBHsZqW0S1pXGOAlLfpXVkwfrD3c';
-
+    $this->shortcode = env('MPESA_SHORTCODE') ?? '174379';
 
     if (!$this->consumerKey || !$this->consumerSecret) {
         Log::error('Missing M-Pesa consumer key or secret');
@@ -27,8 +27,6 @@ public function __construct()
     $this->baseUrl = env('MPESA_ENV') == 'production'
         ? "https://api.safaricom.co.ke"
         : "https://sandbox.safaricom.co.ke";
-
-    $this->shortcode = env('MPESA_SHORTCODE');
     $this->passkey = env('MPESA_PASSKEY');
     $this->callbackUrl = env('MPESA_CALLBACK_URL');
 }
