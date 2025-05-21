@@ -17,8 +17,9 @@ protected $callbackUrl;
 
 public function __construct()
 {
-    $this->consumerKey = env('MPESA_CONSUMER_KEY');
-    $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
+    $this->consumerKey = env('MPESA_CONSUMER_KEY') ?? 'HDneqBCVa3PAJTTeTTY85tWtQ7D8o4kdHCws8Ap2CPrAtOfA';
+    $this->consumerSecret = env('MPESA_CONSUMER_SECRET') ?? 'OxAI6eXA8ek3gxHzQfADAQ8xAiDtODgAY5H8rBHsZqW0S1pXGOAlLfpXVkwfrD3c';
+
 
     if (!$this->consumerKey || !$this->consumerSecret) {
         Log::error('Missing M-Pesa consumer key or secret');
