@@ -52,30 +52,35 @@ class OrderController extends Controller
     }
 
     // Payment method for initiating M-Pesa payment
-public function payment(Order $order, MpesaService $mpesaService)
+public function payment(Request $request, Order $order, MpesaService $mpesaService)
 {
+    $request->validate([
+        'phone' => 'required|numeric|starts_with:254',
+        'amount' => 'required|numeric|min:1'
+    ]);
+
     if ($order->payment_status === 'paid') {
         return redirect()->route('orders.show', $order)
                          ->with('error', 'This order has already been paid.');
     }
 
-    $phone = '2547XXXXXXXX'; // Ideally from authenticated user or request
+    $phone = $request->input('phone');
+    $amount = $request->input('amount');
 
     $response = $mpesaService->stkPush(
-        amount: $order->total,
+        amount: $amount,
         phone: $phone,
         accountReference: "ORDER-{$order->id}",
         transactionDesc: "Payment for Order #{$order->id}"
     );
 
     if ($response['success']) {
-        // Optionally store MerchantRequestID & CheckoutRequestID now
         $data = $response['data'];
         MpesaTransaction::create([
             'order_id' => $order->id,
             'merchantRequestId' => $data['MerchantRequestID'] ?? null,
             'checkoutRequestId' => $data['CheckoutRequestID'] ?? null,
-            'amount' => $order->total,
+            'amount' => $amount,
             'phoneNumber' => $phone,
             'transactionDate' => now(),
         ]);
@@ -88,54 +93,55 @@ public function payment(Order $order, MpesaService $mpesaService)
                      ->with('error', 'STK Push failed: ' . ($response['message'] ?? 'Unknown error'));
 }
 
+
     // Callback method to handle M-Pesa payment confirmation
 public function callback(Request $request)
 {
-    $data = $request->all();
+    $data = $request->input('Body.stkCallback');
 
-    // Log raw callback data for debugging
-    Log::info('M-Pesa Callback Received:', $data);
+    Log::info('M-Pesa Callback Data:', $data);
 
-    // Check if the necessary data exists in the callback response
-    $orderId = $data['OrderID'] ?? null;
+    $checkoutRequestId = $data['CheckoutRequestID'] ?? null;
+    $resultCode = $data['ResultCode'] ?? null;
 
-    if ($orderId) {
-        $order = Order::find($orderId);
-
-        // Check if the order exists
-        if ($order) {
-            // Create the MpesaTransaction record
-            MpesaTransaction::create([
-                'order_id' => $orderId,
-                'merchantRequestId' => $data['MerchantRequestID'] ?? null,
-                'checkoutRequestId' => $data['CheckoutRequestID'] ?? null,
-                'mpesaReceiptNumber' => $data['MpesaReceiptNumber'] ?? null,
-                'phoneNumber' => $data['PhoneNumber'] ?? null,
-                'amount' => $data['Amount'] ?? 0,
-                'transactionDate' => now(), // Can also be parsed from the callback if provided
-            ]);
-
-            // Check if the payment was successful (ResultCode 0)
-            if (isset($data['ResultCode']) && $data['ResultCode'] == 0) {
-                // Payment is successful, update order's payment status to 'paid'
-                $order->payment_status = 'paid';
-                $order->status = 'paid'; // Optional: You can also mark the order status as 'paid'
-                $order->save();
-
-                return redirect()->route('orders.show', $order)
-                                 ->with('success', 'Payment confirmed and order marked as paid.');
-            } else {
-                // Payment failed, log the error and update the order status accordingly
-                Log::error('M-Pesa Payment Failed', ['data' => $data]);
-                return redirect()->route('orders.show', $order)
-                                 ->with('error', 'Payment failed or was not successful.');
-            }
-        }
-
-        return redirect()->route('orders.index')->with('error', 'Order not found.');
+    if (!$checkoutRequestId) {
+        Log::error('Missing CheckoutRequestID in callback.');
+        return response()->json(['error' => 'Invalid callback data'], 400);
     }
 
-    return redirect()->route('orders.index')->with('error', 'Invalid payment callback data.');
-}
+    $transaction = MpesaTransaction::where('checkoutRequestId', $checkoutRequestId)->first();
 
+    if (!$transaction) {
+        Log::error('Transaction not found for CheckoutRequestID: ' . $checkoutRequestId);
+        return response()->json(['error' => 'Transaction not found'], 404);
+    }
+
+    $items = collect($data['CallbackMetadata']['Item'] ?? []);
+
+    $amount = $items->firstWhere('Name', 'Amount')['Value'] ?? null;
+    $receipt = $items->firstWhere('Name', 'MpesaReceiptNumber')['Value'] ?? null;
+    $phone = $items->firstWhere('Name', 'PhoneNumber')['Value'] ?? null;
+    $date = $items->firstWhere('Name', 'TransactionDate')['Value'] ?? now()->format('YmdHis');
+
+    $transaction->update([
+        'mpesaReceiptNumber' => $receipt,
+        'phoneNumber' => $phone,
+        'amount' => $amount,
+        'transactionDate' => $date,
+    ]);
+
+    if ($resultCode === 0) {
+        $order = $transaction->order;
+        $order->update([
+            'payment_status' => 'paid',
+            'status' => 'paid',
+        ]);
+
+        Log::info('Payment successful for order #' . $order->id);
+    } else {
+        Log::warning('M-Pesa STK Push failed with result code: ' . $resultCode);
+    }
+
+    return response()->json(['message' => 'Callback processed'], 200);
+}
 }

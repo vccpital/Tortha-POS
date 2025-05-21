@@ -12,14 +12,16 @@
 
         <form action="{{ route('orders.payment', $order->id) }}" method="POST">
             @csrf
+
             <div class="mb-3">
                 <label for="phone" class="form-label">Phone Number (e.g. 254712345678)</label>
                 <input type="text" name="phone" class="form-control" required>
             </div>
 
+            {{-- Optionally let user enter amount, or use order total --}}
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount (KES)</label>
-                <input type="number" name="amount" class="form-control" required>
+                <input type="number" name="amount" class="form-control" value="{{ $order->total }}" required>
             </div>
 
             <button type="submit" class="btn btn-success">Pay Now</button>
