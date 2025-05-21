@@ -8,91 +8,104 @@ use Carbon\Carbon;
 
 class MpesaService
 {
-protected $baseUrl;
-protected $shortcode;
-protected $passkey;
-protected $consumerKey;
-protected $consumerSecret;
-protected $callbackUrl;
+    protected $baseUrl;
+    protected $shortcode;
+    protected $passkey;
+    protected $consumerKey;
+    protected $consumerSecret;
+    protected $callbackUrl;
 
-public function __construct()
-{
-    $this->consumerKey = env('MPESA_CONSUMER_KEY') ?? 'HDneqBCVa3PAJTTeTTY85tWtQ7D8o4kdHCws8Ap2CPrAtOfA';
-    $this->consumerSecret = env('MPESA_CONSUMER_SECRET') ?? 'OxAI6eXA8ek3gxHzQfADAQ8xAiDtODgAY5H8rBHsZqW0S1pXGOAlLfpXVkwfrD3c';
-    $this->shortcode = env('MPESA_SHORTCODE') ?? '174379';
+    public function __construct()
+    {
+        $this->consumerKey = env('MPESA_CONSUMER_KEY') ?? 'HDneqBCVa3PAJTTeTTY85tWtQ7D8o4kdHCws8Ap2CPrAtOfA';
+        $this->consumerSecret = env('MPESA_CONSUMER_SECRET') ?? 'OxAI6eXA8ek3gxHzQfADAQ8xAiDtODgAY5H8rBHsZqW0S1pXGOAlLfpXVkwfrD3c';
+        $this->shortcode = env('MPESA_SHORTCODE') ?? '174379';
 
-    if (!$this->consumerKey || !$this->consumerSecret) {
-        Log::error('Missing M-Pesa consumer key or secret');
-    }
-    $this->baseUrl = env('MPESA_ENV') == 'production'
-        ? "https://api.safaricom.co.ke"
-        : "https://sandbox.safaricom.co.ke";
-    $this->passkey = env('MPESA_PASSKEY');
-    $this->callbackUrl = env('MPESA_CALLBACK_URL');
-}
-
-public function getAccessToken()
-{
-    $url = $this->baseUrl . '/oauth/v1/generate?grant_type=client_credentials';
-
-    $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)->get($url);
-
-    if ($response->successful()) {
-        return $response->json()['access_token'];
+        if (!$this->consumerKey || !$this->consumerSecret) {
+            Log::error('Missing M-Pesa consumer key or secret');
+        }
+        $this->baseUrl = env('MPESA_ENV') == 'production'
+            ? "https://api.safaricom.co.ke"
+            : "https://sandbox.safaricom.co.ke";
+        $this->passkey = env('MPESA_PASSKEY');
+        $this->callbackUrl = env('MPESA_CALLBACK_URL');
     }
 
-    Log::error('Failed to fetch M-Pesa token: ' . $response->body());
-    return null;
-}
+    public function getAccessToken()
+    {
+        $url = $this->baseUrl . '/oauth/v1/generate?grant_type=client_credentials';
 
+        $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)->get($url);
 
-public function stkPush($amount, $phone, $transactionDesc, $accountReference)
-{
-    $timestamp = Carbon::now()->format('YmdHis');
-    $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
+        if ($response->successful()) {
+            return $response->json()['access_token'];
+        }
 
-    $payload = [
-        "BusinessShortCode" => $this->shortcode,
-        "Password" => $password,
-        "Timestamp" => $timestamp,
-        "TransactionType" => "CustomerPayBillOnline",
-        "Amount" => $amount,
-        "PartyA" => $phone,
-        "PartyB" => $this->shortcode,
-        "PhoneNumber" => $phone,
-        "CallBackURL" => route('stk.callback', [], true),
-        "AccountReference" => $accountReference,
-        "TransactionDesc" => $transactionDesc,
-    ];
+        Log::error('Failed to fetch M-Pesa token: ' . $response->body());
+        return null;
+    }
 
-    $token = $this->getAccessToken();
+    public function stkPush($amount, $phone, $transactionDesc, $accountReference)
+    {
+        $timestamp = Carbon::now()->format('YmdHis');
+        $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
 
-    if (!$token) {
-        Log::error('Failed to fetch M-Pesa token');
+        $payload = [
+            "BusinessShortCode" => $this->shortcode,
+            "Password" => $password,
+            "Timestamp" => $timestamp,
+            "TransactionType" => "CustomerPayBillOnline",
+            "Amount" => $amount,
+            "PartyA" => $phone,
+            "PartyB" => $this->shortcode,
+            "PhoneNumber" => $phone,
+            "CallBackURL" => route('stk.callback', [], true),
+            "AccountReference" => $accountReference,
+            "TransactionDesc" => $transactionDesc,
+        ];
+
+        // Log credentials and important variables
+        Log::info('M-Pesa STK Push Request Details:', [
+            'consumerKey' => $this->consumerKey,
+            'consumerSecret' => $this->consumerSecret,
+            'shortcode' => $this->shortcode,
+            'passkey' => $this->passkey,
+            'callbackUrl' => $this->callbackUrl,
+            'payload' => $payload
+        ]);
+
+        $token = $this->getAccessToken();
+
+        if (!$token) {
+            Log::error('Failed to fetch M-Pesa token');
+            return [
+                'success' => false,
+                'message' => 'Failed to get access token'
+            ];
+        }
+
+        // Log the access token before sending the request
+        Log::info('Access Token:', ['token' => $token]);
+
+        $response = Http::withToken($token)
+            ->post($this->baseUrl . '/mpesa/stkpush/v1/processrequest', $payload);
+
+        // Log the M-Pesa STK Push response
+        Log::info('M-Pesa STK Push response:', $response->json());
+
+        if ($response->successful()) {
+            return [
+                'success' => true,
+                'data' => $response->json()
+            ];
+        }
+
+        Log::error('STK Push failed: ' . $response->body());
         return [
             'success' => false,
-            'message' => 'Failed to get access token'
+            'message' => 'STK Push failed',
+            'response' => $response->json()
         ];
     }
-
-    $response = Http::withToken($token)
-        ->post($this->baseUrl . '/mpesa/stkpush/v1/processrequest', $payload);
-
-    Log::info('M-Pesa STK Push request payload:', $payload);
-    Log::info('M-Pesa STK Push response:', $response->json());
-
-    if ($response->successful()) {
-        return [
-            'success' => true,
-            'data' => $response->json()
-        ];
-    }
-
-    Log::error('STK Push failed: ' . $response->body());
-    return [
-        'success' => false,
-        'message' => 'STK Push failed',
-        'response' => $response->json()
-    ];
 }
-}
+
