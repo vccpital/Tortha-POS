@@ -99,6 +99,11 @@ public function callback(Request $request)
 {
     $data = $request->input('Body.stkCallback');
 
+    if (!$data) {
+        Log::error('Empty callback body.');
+        return response()->json(['error' => 'Empty body'], 400);
+    }
+
     Log::info('M-Pesa Callback Data:', $data);
 
     $checkoutRequestId = $data['CheckoutRequestID'] ?? null;
@@ -130,18 +135,20 @@ public function callback(Request $request)
         'transactionDate' => $date,
     ]);
 
-    if ($resultCode === 0) {
-        $order = $transaction->order;
-        $order->update([
-            'payment_status' => 'paid',
-            'status' => 'paid',
-        ]);
-
-        Log::info('Payment successful for order #' . $order->id);
+    if ((int) $resultCode === 0) {
+        if ($transaction->order) {
+            $transaction->order->update([
+                'payment_status' => 'paid',
+                'status' => 'paid',
+            ]);
+            Log::info('Payment successful for order #' . $transaction->order->id);
+        } else {
+            Log::warning('Payment received, but no order linked.');
+        }
     } else {
-        Log::warning('M-Pesa STK Push failed with result code: ' . $resultCode);
+        Log::warning('M-Pesa STK Push failed. ResultCode: ' . $resultCode);
     }
 
-    return response()->json(['message' => 'Callback processed'], 200);
+    return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success'], 200);
 }
 }
