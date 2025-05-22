@@ -33,8 +33,13 @@ public function index(Request $request)
         }
 
         $orders = $query->get();
-    } elseif (in_array($user->usertype, ['admin', 'devadmin'])) {
-        // Admins and devadmins see all orders
+    } elseif ($user->usertype === 'admin') {
+        // Admins see all orders from their store, grouped by cashier
+        $orders = Order::with(['items', 'cashier', 'customer', 'store'])
+            ->where('store_id', $user->store_id)
+            ->get();
+    } elseif (in_array($user->usertype, ['devadmin'])) {
+        // Devadmins see all orders, grouped by store
         $orders = Order::with(['items', 'cashier', 'customer', 'store'])->get();
     } else {
         // Default: no access

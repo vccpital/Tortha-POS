@@ -73,12 +73,13 @@
                                 <label for="image" class="form-label">Product Image (Optional)</label>
                                 <input type="file" name="image" id="image" class="form-control" accept=".jpg,.jpeg,.png,.webp">
                                 @if ($product->images->first())
-                                    <div class="mt-2">
-                                        <strong>Current Image:</strong><br>
-                                        <img src="{{ asset('storage/' . $product->images->first()->image_url) }}" alt="Current Image" width="100">
-                                    </div>
+                                <div class="mt-2">
+                                    <strong>Current Image:</strong><br>
+                                    <img src="{{ $product->images->first()->image_url }}" alt="Current Image" width="100">
+                                </div>
                                 @endif
                             </div>
+
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Update Product</button>

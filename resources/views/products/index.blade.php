@@ -43,7 +43,7 @@
                             <td>{{ $product->stock_qty }}</td>
                             <td>
                                 @foreach ($product->images as $image)
-                                    <img src="{{ asset('storage/' . $product->images->first()->image_url) }}" alt="Product Image" width="50" class="rounded me-1 mb-1">
+                               <img src="{{ $image->image_url }}" alt="Product Image" width="50" class="rounded me-1 mb-1">
                                 @endforeach
                             </td>
                             <td>

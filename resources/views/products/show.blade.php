@@ -34,7 +34,12 @@
                     <strong>Images:</strong>
                     <div class="d-flex flex-wrap mt-2">
                         @forelse ($product->images as $image)
-                            <img src="{{ asset('storage/' . $image->image_url) }}" alt="Product Image" class="img-thumbnail me-2 mb-2" width="100">
+                            <img 
+                                src="{{ $image->image_url }}" 
+                                alt="Product Image" 
+                                class="img-thumbnail me-2 mb-2" 
+                                width="100"
+                            >
                         @empty
                             <p>No images uploaded.</p>
                         @endforelse

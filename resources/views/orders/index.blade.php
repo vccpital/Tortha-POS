@@ -9,6 +9,7 @@
         @endif
 
         <div class="mb-3 d-flex justify-content-between align-items-center">
+            {{-- Show filters only for cashier --}}
             @if (Auth::user()->usertype === 'cashier')
                 <div>
                     <a href="{{ route('orders.index', ['filter' => 'all']) }}"
@@ -22,9 +23,14 @@
                 </div>
             @endif
 
+            {{-- Admin/Devadmin Information --}}
             @if (in_array(Auth::user()->usertype, ['admin', 'devadmin']))
                 <div class="text-muted fw-medium">
-                    Viewing all orders grouped by store
+                    @if (Auth::user()->usertype === 'admin')
+                        Viewing all orders for your store, grouped by <strong>cashier</strong>
+                    @elseif (Auth::user()->usertype === 'devadmin')
+                        Viewing all orders grouped by <strong>store</strong>
+                    @endif
                 </div>
             @endif
 
@@ -38,85 +44,21 @@
                 @if ($orders->isEmpty())
                     <p>No orders found.</p>
                 @else
-                    @if (in_array(Auth::user()->usertype, ['admin', 'devadmin']))
+                    {{-- For Admin: Show orders for their store, grouped by cashier --}}
+                    @if (Auth::user()->usertype === 'admin')
+                        @foreach ($orders->groupBy('cashier.name') as $cashierName => $cashierOrders)
+                            <h5 class="mt-4">{{ $cashierName ?? 'Unknown Cashier' }}</h5>
+                            @include('orders.partials.table', ['orders' => $cashierOrders])
+                        @endforeach
+                    {{-- For Devadmin: Group orders by store --}}
+                    @elseif (Auth::user()->usertype === 'devadmin')
                         @foreach ($orders->groupBy('store.name') as $storeName => $storeOrders)
                             <h5 class="mt-4">{{ $storeName ?? 'Unknown Store' }}</h5>
-                            <table class="table table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Cashier</th>
-                                        <th>Customer</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Payment</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($storeOrders as $order)
-                                        <tr>
-                                            <td>{{ $order->id }}</td>
-                                            <td>{{ $order->cashier->name ?? 'N/A' }}</td>
-                                            <td>{{ $order->customer->name ?? 'N/A' }}</td>
-                                            <td>KSH {{ number_format($order->total, 2) }}</td>
-                                            <td>{{ ucfirst($order->status) }}</td>
-                                            <td>{{ ucfirst($order->payment_status) }}</td>
-                                            <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                                            <td>
-                                                <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-info">View</a>
-                                                <a href="{{ route('orders.edit', $order) }}" class="btn btn-sm btn-warning">Edit</a>
-                                                <form action="{{ route('orders.destroy', $order) }}" method="POST" style="display:inline-block;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this order?')">Delete</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            @include('orders.partials.table', ['orders' => $storeOrders])
                         @endforeach
+                    {{-- For other users (like cashier), show orders without grouping --}}
                     @else
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Store</th>
-                                    <th>Cashier</th>
-                                    <th>Customer</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                    <th>Payment</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($orders as $order)
-                                    <tr>
-                                        <td>{{ $order->id }}</td>
-                                        <td>{{ $order->store->name ?? 'N/A' }}</td>
-                                        <td>{{ $order->cashier->name ?? 'N/A' }}</td>
-                                        <td>{{ $order->customer->name ?? 'N/A' }}</td>
-                                        <td>KSH {{ number_format($order->total, 2) }}</td>
-                                        <td>{{ ucfirst($order->status) }}</td>
-                                        <td>{{ ucfirst($order->payment_status) }}</td>
-                                        <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                                        <td>
-                                            <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-info">View</a>
-                                            <a href="{{ route('orders.edit', $order) }}" class="btn btn-sm btn-warning">Edit</a>
-                                            <form action="{{ route('orders.destroy', $order) }}" method="POST" style="display:inline-block;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this order?')">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        @include('orders.partials.table', ['orders' => $orders])
                     @endif
                 @endif
             </div>
