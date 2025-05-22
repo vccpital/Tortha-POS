@@ -1,74 +1,103 @@
 <x-app-layout>
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0">Stores</h2>
-            <a href="{{ route('stores.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Add Store
+    <x-slot name="header">
+        <h2 class="fw-semibold fs-4 text-dark">
+            {{ __('Stores') }}
+        </h2>
+    </x-slot>
+
+    <div class="card shadow-sm border-0 py-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-primary fw-bold">
+                <i class="bi bi-shop me-2"></i>Store List
+            </h5>
+            <a href="{{ route('stores.create') }}" class="btn btn-sm btn-success" aria-label="Add new store" title="Add new store">
+                <i class="bi bi-plus-circle me-1"></i> Add New
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
+        <div class="card-body p-0">
+            {{-- Session Feedback --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show rounded-0 mb-0" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            {{-- Store Table --}}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr class="text-primary fw-semibold">
+                            <th scope="col">Name</th>
+                            <th scope="col">Address</th>
+                            <th scope="col">Contact Info</th>
+                            <th scope="col" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($stores as $store)
+                            <tr>
+                                <td class="fw-medium">{{ $store->name }}</td>
+                                <td>{{ $store->address }}</td>
+                                <td>
+                                    @php
+                                        $contact = is_array($store->contact_info)
+                                            ? $store->contact_info
+                                            : json_decode($store->contact_info, true);
+                                    @endphp
+                                    @if($contact)
+                                        <ul class="list-unstyled mb-0">
+                                            @foreach($contact as $key => $value)
+                                                <li>
+                                                    <span class="badge bg-secondary me-1">{{ ucfirst($key) }}:</span> {{ $value }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <span class="text-muted fst-italic">No contact info</span>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group" role="group" aria-label="Store actions">
+                                        <a href="{{ route('stores.show', $store->id) }}"
+                                           class="btn btn-outline-primary btn-sm"
+                                           title="View store details"
+                                           aria-label="View store">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ route('stores.edit', $store->id) }}"
+                                           class="btn btn-outline-secondary btn-sm"
+                                           title="Edit store"
+                                           aria-label="Edit store">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <form action="{{ route('stores.destroy', $store->id) }}"
+                                              method="POST"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to delete this store?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    title="Delete store"
+                                                    aria-label="Delete store">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="bi bi-info-circle me-1"></i> No stores found.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
-
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Address</th>
-                        <th scope="col">Contact Info</th>
-                        <th scope="col" style="width: 180px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($stores as $store)
-                        <tr>
-                            <td>{{ $store->name }}</td>
-                            <td>{{ $store->address }}</td>
-                            <td>
-                                @php
-                                    $contact = is_array($store->contact_info) ? $store->contact_info : json_decode($store->contact_info, true);
-                                @endphp
-                                @if($contact)
-                                    <ul class="mb-0 ps-3">
-                                        @foreach($contact as $key => $value)
-                                            <li><strong>{{ ucfirst($key) }}:</strong> {{ $value }}</li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <em>No contact info</em>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="dropdown">
-    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Actions
-    </button>
-    <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ route('stores.show', $store->id) }}"><i class="bi bi-eye me-1"></i>View</a></li>
-        <li><a class="dropdown-item" href="{{ route('stores.edit', $store->id) }}"><i class="bi bi-pencil-square me-1"></i>Edit</a></li>
-        <li>
-            <form action="{{ route('stores.destroy', $store->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this store?')">
-                @csrf
-                @method('DELETE')
-                <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-1"></i>Delete</button>
-            </form>
-        </li>
-    </ul>
-</div>
-
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="text-center">No stores found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
         </div>
     </div>
 </x-app-layout>

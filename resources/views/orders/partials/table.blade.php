@@ -2,10 +2,10 @@
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>ID</th>
+            <th class="d-none d-md-table-cell">ID</th>
             <th>Store</th>
-            <th>Cashier</th>
-            <th>Customer</th>
+            <th class="d-none d-md-table-cell">Cashier</th>
+            <th class="d-none d-md-table-cell">Customer</th>
             <th>Total</th>
             <th>Status</th>
             <th>Payment</th>
@@ -16,10 +16,10 @@
     <tbody>
         @foreach ($orders as $order)
             <tr>
-                <td>{{ $order->id }}</td>
+                <td class="d-none d-md-table-cell">{{ $order->id }}</td>
                 <td>{{ $order->store->name ?? 'N/A' }}</td>
-                <td>{{ $order->cashier->name ?? 'N/A' }}</td>
-                <td>{{ $order->customer->name ?? 'N/A' }}</td>
+                <td class="d-none d-md-table-cell">{{ $order->cashier->name ?? 'N/A' }}</td>
+                <td class="d-none d-md-table-cell">{{ $order->customer->name ?? 'N/A' }}</td>
                 <td>KSH {{ number_format($order->total, 2) }}</td>
                 <td>{{ ucfirst($order->status) }}</td>
                 <td>{{ ucfirst($order->payment_status) }}</td>

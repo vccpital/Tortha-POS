@@ -1,147 +1,139 @@
 <x-app-layout>
-    @if (Auth::user()->usertype === 'admin')
-    <div class="py-12 d-flex">
-        <div class="w-75 mx-auto sm:px-6 lg:px-8 justify-content-center">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-3">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show col-md-6" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @elseif (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-            <div class="text-center fw-bold mb-4"><h2><strong style="color: #ee662a;">Users Overview</strong></h2></div>
-            
-            <!-- Displaying message about the store -->
-            <div class="mb-3">
-                <strong>You're viewing users from: </strong>{{ auth()->user()->store ? auth()->user()->store->name : 'No store' }}
-            </div>
-
-            <!-- Add New User Button (Sticky or Positioned) -->
-                <div class="d-flex justify-content-between align-items-center mb-4 gap-2">
-                    <input id="myInput" type="text" placeholder="Search for any user..." class="form-control">
-                    <a href="{{ route('users.create') }}" class="btn btn-primary" style="white-space: nowrap;">Add New User</a>
+        <x-slot name="header">
+        <h2 class="fw-semibold fs-4 text-dark">
+            {{ __('Users') }}
+        </h2>
+    </x-slot>
+@if (Auth::user()->usertype === 'admin' || Auth::user()->usertype === 'devadmin')
+            <div class="card shadow-sm border-1 border-transparent py-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="bi bi-people-fill me-2"></i>Users Overview
+                    </h5>
+                    <a href="{{ route('users.create') }}" class="btn btn-sm btn-success" aria-label="Add new user">
+                        <i class="bi bi-person-plus me-1"></i> Add New User
+                    </a>
                 </div>
+                <div class="card-body">
 
-            <div style="max-height: 578px; overflow-y: auto;">
-            <table class="table table-hover table-responsive bg-light">
-                <thead>
-                    <tr class="fw-bolder text-primary">
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>User Type</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTable">
-                    @foreach ($usersSameStore as $user)
-                        <tr class="text-success fw-bold">
-                            <td>{{ $user->name }}</td>
-                            <td>{{ $user->email }}</td>
-                            <td>{{ $user->usertype }}</td>
-                            <td>
-                                <a href="{{ route('users.edit', $user) }}" class="btn btn-warning">Edit</a>
-                                <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    {{-- Flash Messages --}}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @elseif (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    {{-- Store Info (Admin only) --}}
+                    @if(Auth::user()->usertype === 'admin')
+                        <p class="text-muted mb-3">
+                            <strong>Viewing users from:</strong>
+                            {{ auth()->user()->store ? auth()->user()->store->name : 'No store' }}
+                        </p>
+                    @endif
+
+                    {{-- Search--}}
+                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+                        <input id="myInput" type="text" class="form-control w-100 w-md-50" placeholder="Search for any user..." aria-label="Search users">
+                    </div>
+
+                    {{-- Users Table --}}
+                    <div class="table-responsive" style="max-height: 578px; overflow-y: auto;">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr class="text-primary fw-bold">
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>User Type</th>
+                                    @if(Auth::user()->usertype === 'devadmin')
+                                        <th>Store</th>
+                                    @endif
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable">
+                                @if(Auth::user()->usertype === 'admin')
+                                    @foreach ($usersSameStore as $user)
+                                        <tr>
+                                            <td>{{ $user->name }}</td>
+                                            <td>{{ $user->email }}</td>
+                                            <td>{{ ucfirst($user->usertype) }}</td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group" aria-label="User actions">
+                                                    <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-warning" title="Edit user">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </a>
+                                                    <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?')" class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete user">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @elseif(Auth::user()->usertype === 'devadmin')
+                                    @foreach ($usersByStore as $storeName => $users)
+                                        <tr>
+                                            <td colspan="5" class="bg-light fw-bold text-center text-secondary">
+                                                {{ $storeName }}
+                                            </td>
+                                        </tr>
+                                        @foreach ($users as $user)
+                                            <tr>
+                                                <td>{{ $user->name }}</td>
+                                                <td>{{ $user->email }}</td>
+                                                <td>{{ ucfirst($user->usertype) }}</td>
+                                                <td>{{ $user->store ? $user->store->name : 'No store' }}</td>
+                                                <td class="text-end">
+                                                    <div class="btn-group" role="group" aria-label="User actions">
+                                                        <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-warning" title="Edit user">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </a>
+                                                        <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?')" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete user">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
             </div>
-        </div>
-        </div>
-    </div>
+
+    {{-- JavaScript Filtering --}}
     <script>
-        $(document).ready(function(){
-            $("#myInput").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $("#usersTable tr").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('myInput');
+            input.addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                document.querySelectorAll("#usersTable tr").forEach(row => {
+                    row.style.display = row.textContent.toLowerCase().includes(value) ? '' : 'none';
                 });
             });
         });
     </script>
+@else
+    <div class="alert alert-warning col-auto p-3 fw-bold m-4" role="alert">
+        <i class="bi bi-shield-exclamation me-2"></i> You do not have permission to access this section.
+    </div>
 @endif
-
-
-    
-@if (Auth::user()->usertype === 'devadmin')
-    <div class="py-12 d-flex">
-        <div class="w-75 mx-auto sm:px-6 lg:px-8 justify-content-center">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-3">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show col-md-6" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @elseif (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-            <a href="{{ route('users.create') }}" class="btn btn-primary mb-auto mt-1">Add New User</a>
-            <div class="text-center fw-bold mb-4"><h2><strong style="color: #ee662a;">Users Overview</strong></h2></div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <input id="myInput" type="text" placeholder="Search for any user..." class="form-control">
-            </div>
-            <div style="max-height: 578px; overflow-y: auto;">
-            <table class="table table-hover table-responsive bg-light">
-                <thead>
-                    <tr class="fw-bolder text-primary">
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>User Type</th>
-                        <th>Store</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTable">
-                    @foreach ($usersByStore as $storeName => $users)
-                        <tr>
-                            <td colspan="5" class="fw-bold text-center text-secondary">{{ $storeName }}</td>
-                        </tr>
-                        @foreach ($users as $user)
-                            <tr class="text-success fw-bold">
-                                <td>{{ $user->name }}</td>
-                                <td>{{ $user->email }}</td>
-                                <td>{{ $user->usertype }}</td>
-                                <td>{{ $user->store ? $user->store->name : 'No store' }}</td>
-                                <td>
-                                    <a href="{{ route('users.edit', $user) }}" class="btn btn-warning">Edit</a>
-                                    <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endforeach
-                </tbody>
-            </table>
-            </div>
-        </div>
-        </div>
-    </div>
-    <script>
-        $(document).ready(function(){
-            $("#myInput").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                $("#usersTable tr").filter(function() {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
-            });
-        });
-    </script>
-    @endif
-    @if (!in_array(Auth::user()->usertype, ['devadmin', 'admin']))
-    <div class="alert alert-warning col-auto p-2 fw-bold">
-        You do not have the necessary permissions to perform this action.
-    </div>
-    @endif
-
-
 </x-app-layout>
