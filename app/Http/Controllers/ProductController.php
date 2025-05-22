@@ -70,6 +70,7 @@ public function store(Request $request)
             // Log the file path before uploading for debugging purposes
             logger()->debug("File path before upload: {$filename}");
 
+            dd(config('filesystems.disks.s3'));
             // Upload to S3
             $path = Storage::disk('s3')->putFileAs('products', $file, $filename);
             if (!$path) {
