@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Scan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Exports\OrdersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 
 class OrderController extends Controller
@@ -73,7 +71,6 @@ public function index(Request $request)
     return view('orders.index', compact('orders', 'cashiers', 'cashierId'));
 }
 
-
     public function show(Order $order) {
         $order->load(['items', 'cashier', 'customer']);
         return view('orders.show', compact('order'));
@@ -84,35 +81,30 @@ public function index(Request $request)
         return view('mpesa-test', compact('order'));
     }
 
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'store_id' => 'required|exists:stores,id',
-        'user_id' => 'nullable|exists:users,id',
-        'customer_id' => 'nullable|exists:users,id',
-        'total' => 'numeric',
-        'status' => 'in:cart,pending,paid,cancelled,refunded',
-        'payment_status' => 'in:unpaid,partially_paid,paid',
-        'is_draft' => 'boolean',
-        'due_date' => 'nullable|date',
-    ]);
+    public function store(Request $request) {
+        $validated = $request->validate([
+            'store_id' => 'required|exists:stores,id',
+            'user_id' => 'nullable|exists:users,id',
+            'customer_id' => 'nullable|exists:users,id',
+            'total' => 'numeric',
+            'status' => 'in:cart,pending,paid,cancelled,refunded',
+            'payment_status' => 'in:unpaid,partially_paid,paid',
+            'is_draft' => 'boolean',
+            'due_date' => 'nullable|date',
+        ]);
+        Order::create($validated);
+        return redirect()->route('orders.index')->with('success', 'Order created successfully.');
+    }
 
-    // ✅ Store order
-    $order = Order::create($validated);
+    public function update(Request $request, Order $order) {
+        $order->update($request->all());
+        return redirect()->route('orders.show', $order)->with('success', 'Order updated successfully.');
+    }
 
-    // ✅ Create scan for this order
-    $scan = Scan::create([
-        'type' => 'order',
-        'payload' => ['order_id' => $order->id],
-        'generated_by' => Auth::id(),
-        'expires_at' => now()->addMinutes(10),
-        'token' => Str::uuid(),
-    ]);
-
-    // ✅ You could redirect to the order show page with the scan token
-    return redirect()->route('orders.show', $order)->with('scan_token', $scan->token);
-}
-
+    public function destroy(Order $order) {
+        $order->delete();
+        return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
+    }
 
     // Payment method for initiating M-Pesa payment
 public function payment(Request $request, Order $order, MpesaService $mpesaService)
@@ -200,16 +192,21 @@ public function callback(Request $request)
 
     if ((int) $resultCode === 0) {
         if ($transaction->order) {
-            $transaction->order->update([
-                'payment_status' => 'paid',
-                'status' => 'paid',
+            $order = $transaction->order;
+            $order->status = 'paid';
+            $order->payment_status = 'paid';
+            $order->save();
+
+            Log::info('✅ Order marked as paid', [
+                'order_id' => $order->id,
+                'status' => $order->status,
+                'payment_status' => $order->payment_status
             ]);
-            Log::info('Payment successful for order #' . $transaction->order->id);
         } else {
-            Log::warning('Payment received, but no order linked.');
+            Log::warning('⚠️ Payment received but no order linked to transaction ID ' . $transaction->id);
         }
     } else {
-        Log::warning('M-Pesa STK Push failed. ResultCode: ' . $resultCode);
+        Log::warning('❌ M-Pesa STK Push failed. ResultCode: ' . $resultCode);
     }
 
     return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success'], 200);
