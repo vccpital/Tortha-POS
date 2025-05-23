@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-bold fs-3 text-dark-emphasis">
+        <h2 class="fw-bold fs-3 text-primary-emphasis">
             {{ __('🛍️ Our Products') }}
         </h2>
     </x-slot>

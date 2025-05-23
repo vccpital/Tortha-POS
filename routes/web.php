@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('stores', StoreController::class);
     Route::resource('products', ProductController::class);
     Route::resource('product-images', ProductImageController::class)->only(['store', 'destroy']);
+    Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
     Route::resource('orders', OrderController::class);
     Route::resource('order-items', OrderItemController::class);
     // Payment Route

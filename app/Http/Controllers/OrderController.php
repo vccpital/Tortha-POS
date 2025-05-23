@@ -3,12 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Scan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\MpesaTransaction;
 use App\Services\MpesaService;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\OrdersExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
+
 
 class OrderController extends Controller
 {
@@ -17,6 +23,7 @@ public function index(Request $request)
 {
     $user = Auth::user();
     $filter = $request->get('filter'); // e.g., 'my' or 'all'
+    $cashierId = $request->get('cashier_id'); // New filter for admin
 
     if ($user->usertype === 'user') {
         // Regular users see only their orders
@@ -29,15 +36,24 @@ public function index(Request $request)
 
         // If filter is set to 'my', show only the cashier's own orders
         if ($filter === 'my') {
-            $query->where('cashier_id', $user->id);
+            $query->where('user_id', $user->id);
         }
 
         $orders = $query->get();
     } elseif ($user->usertype === 'admin') {
-        // Admins see all orders from their store, grouped by cashier
-        $orders = Order::with(['items', 'cashier', 'customer', 'store'])
-            ->where('store_id', $user->store_id)
-            ->get();
+        $query = Order::with(['items', 'cashier', 'customer', 'store'])
+            ->where('store_id', $user->store_id);
+
+        // If a cashier is selected, filter by that cashier
+        if ($cashierId) {
+            $query->where('user_id', $cashierId);
+        } else {
+            // Otherwise, order by newest first
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $orders = $query->get();
+
     } elseif (in_array($user->usertype, ['devadmin'])) {
         // Devadmins see all orders, grouped by store
         $orders = Order::with(['items', 'cashier', 'customer', 'store'])->get();
@@ -46,7 +62,15 @@ public function index(Request $request)
         $orders = collect();
     }
 
-    return view('orders.index', compact('orders'));
+    // For admin, also pass list of cashiers of the store for the dropdown
+    $cashiers = null;
+    if ($user->usertype === 'admin') {
+        $cashiers = \App\Models\User::where('store_id', $user->store_id)
+            ->where('usertype', 'cashier')
+            ->get();
+    }
+
+    return view('orders.index', compact('orders', 'cashiers', 'cashierId'));
 }
 
 
@@ -60,30 +84,35 @@ public function index(Request $request)
         return view('mpesa-test', compact('order'));
     }
 
-    public function store(Request $request) {
-        $validated = $request->validate([
-            'store_id' => 'required|exists:stores,id',
-            'user_id' => 'nullable|exists:users,id',
-            'customer_id' => 'nullable|exists:users,id',
-            'total' => 'numeric',
-            'status' => 'in:cart,pending,paid,cancelled,refunded',
-            'payment_status' => 'in:unpaid,partially_paid,paid',
-            'is_draft' => 'boolean',
-            'due_date' => 'nullable|date',
-        ]);
-        Order::create($validated);
-        return redirect()->route('orders.index')->with('success', 'Order created successfully.');
-    }
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'store_id' => 'required|exists:stores,id',
+        'user_id' => 'nullable|exists:users,id',
+        'customer_id' => 'nullable|exists:users,id',
+        'total' => 'numeric',
+        'status' => 'in:cart,pending,paid,cancelled,refunded',
+        'payment_status' => 'in:unpaid,partially_paid,paid',
+        'is_draft' => 'boolean',
+        'due_date' => 'nullable|date',
+    ]);
 
-    public function update(Request $request, Order $order) {
-        $order->update($request->all());
-        return redirect()->route('orders.show', $order)->with('success', 'Order updated successfully.');
-    }
+    // ✅ Store order
+    $order = Order::create($validated);
 
-    public function destroy(Order $order) {
-        $order->delete();
-        return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
-    }
+    // ✅ Create scan for this order
+    $scan = Scan::create([
+        'type' => 'order',
+        'payload' => ['order_id' => $order->id],
+        'generated_by' => Auth::id(),
+        'expires_at' => now()->addMinutes(10),
+        'token' => Str::uuid(),
+    ]);
+
+    // ✅ You could redirect to the order show page with the scan token
+    return redirect()->route('orders.show', $order)->with('scan_token', $scan->token);
+}
+
 
     // Payment method for initiating M-Pesa payment
 public function payment(Request $request, Order $order, MpesaService $mpesaService)
@@ -185,4 +214,43 @@ public function callback(Request $request)
 
     return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success'], 200);
 }
+
+public function export(Request $request)
+{
+    $filter = $request->input('filter', 'all');
+
+    switch ($filter) {
+        case 'today':
+            $startDate = Carbon::now()->startOfDay()->toDateTimeString();
+            $endDate = Carbon::now()->endOfDay()->toDateTimeString();
+            break;
+        case 'week':
+            $startDate = Carbon::now()->startOfWeek()->toDateTimeString();
+            $endDate = Carbon::now()->endOfWeek()->toDateTimeString();
+            break;
+        case 'month':
+            $startDate = Carbon::now()->startOfMonth()->toDateTimeString();
+            $endDate = Carbon::now()->endOfMonth()->toDateTimeString();
+            break;
+        case '3months':
+            $startDate = Carbon::now()->subMonths(3)->startOfMonth()->toDateTimeString();
+            $endDate = Carbon::now()->endOfMonth()->toDateTimeString();
+            break;
+        case 'year':
+            $startDate = Carbon::now()->startOfYear()->toDateTimeString();
+            $endDate = Carbon::now()->endOfYear()->toDateTimeString();
+            break;
+        case 'custom':
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            break;
+        default:
+            $startDate = null;
+            $endDate = null;
+            break;
+    }
+
+    return Excel::download(new OrdersExport($startDate, $endDate), 'orders.xlsx');
+}
+
 }

@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="fw-semibold fs-4 text-dark">
-            {{ __('Stores') }}
+        <h2 class="fw-bold fs-3 text-primary-emphasis"> 
+            <i class="bi bi-shop me-2"></i>{{ __('Stores') }}
         </h2>
     </x-slot>
 
     <div class="card shadow-sm border-0 py-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0 text-primary fw-bold">
-                <i class="bi bi-shop me-2"></i>Store List
+                Store List
             </h5>
             <a href="{{ route('stores.create') }}" class="btn btn-sm btn-success" aria-label="Add new store" title="Add new store">
                 <i class="bi bi-plus-circle me-1"></i> Add New

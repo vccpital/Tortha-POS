@@ -1,23 +1,27 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="fw-semibold fs-4 text-dark">Mpesa Transactions</h2>
-    </x-slot>
+<x-slot name="header">
+    <h2 class="fw-bold fs-3 text-primary-emphasis mb-0">
+        <i class="bi bi-currency-exchange me-2 text-primary-emphasis"></i>Mpesa Transactions
+    </h2>
+</x-slot>
+
 
     <div class="container py-5">
         @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         @endif
 
         <div class="mb-3 d-flex justify-content-between align-items-center">
-            @if (Auth::user()->usertype === 'admin')
-                <div>
+            <div>
+                @if (Auth::user()->usertype === 'admin')
                     <span>Viewing transactions grouped by cashier for your store</span>
-                </div>
-            @elseif (Auth::user()->usertype === 'devadmin')
-                <div>
+                @elseif (Auth::user()->usertype === 'devadmin')
                     <span>Viewing transactions grouped by store</span>
-                </div>
-            @endif
+                @endif
+            </div>
 
             <div>
                 <a href="{{ route('orders.index') }}" class="btn btn-primary">Create New Transaction</a>
@@ -27,7 +31,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 @if ($transactions->isEmpty())
-                    <p>No transactions found.</p>
+                    <p class="text-muted fst-italic">No transactions found.</p>
                 @else
                     @if (Auth::user()->usertype === 'admin')
                         @foreach ($transactions as $cashierName => $transactionGroup)

@@ -1,19 +1,17 @@
 <x-app-layout>
-        <x-slot name="header">
-        <h2 class="fw-semibold fs-4 text-dark">
-            {{ __('Users') }}
+<x-slot name="header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold fs-3 mb-0 text-primary-emphasis">
+            <i class="bi bi-people-fill me-2"></i>Users Overview
         </h2>
-    </x-slot>
+        <a href="{{ route('users.create') }}" class="btn btn-sm btn-success" aria-label="Add new user">
+            <i class="bi bi-person-plus me-1"></i> Add New User
+        </a>
+    </div>
+</x-slot>
+
 @if (Auth::user()->usertype === 'admin' || Auth::user()->usertype === 'devadmin')
             <div class="card shadow-sm border-1 border-transparent py-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-primary fw-bold">
-                        <i class="bi bi-people-fill me-2"></i>Users Overview
-                    </h5>
-                    <a href="{{ route('users.create') }}" class="btn btn-sm btn-success" aria-label="Add new user">
-                        <i class="bi bi-person-plus me-1"></i> Add New User
-                    </a>
-                </div>
                 <div class="card-body">
 
                     {{-- Flash Messages --}}

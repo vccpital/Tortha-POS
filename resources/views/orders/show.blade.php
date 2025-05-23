@@ -74,6 +74,10 @@
                 @endif
             </div>
         </div>
+@if(session('scan_token'))
+    <h5>Customer QR Code</h5>
+    {!! QrCode::size(200)->generate(route('scans.lookup', session('scan_token'))) !!}
+@endif
 
         @if($order->payment_status !== 'paid')
             <div class="mt-4 col-auto">

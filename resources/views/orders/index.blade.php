@@ -1,7 +1,37 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="fw-semibold fs-4 text-dark">Orders</h2>
-    </x-slot>
+<x-slot name="header">
+    <div class="d-flex justify-content-between align-items-center">
+        <!-- Left side: Title -->
+        <h2 class="fw-bold fs-3 text-primary-emphasis">🧾 Orders</h2>
+
+        <!-- Right side: Form inline -->
+        <form action="{{ route('orders.export') }}" method="GET" class="d-flex align-items-center gap-2 mb-0">
+            <select name="filter" id="filter" class="form-select form-select-sm">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="3months">Last 3 Months</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+            </select>
+
+            <input type="date" name="start_date" class="form-control form-control-sm" placeholder="Start Date" id="custom-start" style="display: none; width: auto;">
+            <input type="date" name="end_date" class="form-control form-control-sm" placeholder="End Date" id="custom-end" style="display: none; width: auto;">
+
+            <button type="submit" class="btn btn-success btn-sm">Download</button>
+        </form>
+    </div>
+</x-slot>
+
+<script>
+    document.getElementById('filter').addEventListener('change', function () {
+        const custom = this.value === 'custom';
+        document.getElementById('custom-start').style.display = custom ? 'inline-block' : 'none';
+        document.getElementById('custom-end').style.display = custom ? 'inline-block' : 'none';
+    });
+</script>
+
 
     <div class="border-1 py-4">
         {{-- Feedback Message --}}
@@ -32,14 +62,29 @@
 
             {{-- Role Info (Admin/Devadmin) --}}
             @if (in_array(Auth::user()->usertype, ['admin', 'devadmin']))
-                <div class="text-muted small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    @if (Auth::user()->usertype === 'admin')
-                        Viewing all orders for your store grouped by <strong>cashier</strong>.
-                    @else
-                        Viewing all orders grouped by <strong>store</strong>.
-                    @endif
-                </div>
+<div class="text-muted small d-flex align-items-center gap-2">
+    <i class="bi bi-info-circle"></i>
+    @if (Auth::user()->usertype === 'admin')
+        <span>Viewing all orders for your store grouped by <strong>cashier</strong>.</span>
+    @else
+        <span>Viewing all orders grouped by <strong>store</strong>.</span>
+    @endif
+
+    @if (Auth::user()->usertype === 'admin')
+        <form method="GET" action="{{ route('orders.index') }}" class="d-flex align-items-center ms-auto">
+            <label for="cashier-select" class="form-label small mb-0 me-2">Filter by Cashier:</label>
+            <select name="cashier_id" id="cashier-select" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Cashiers</option>
+                @foreach ($cashiers as $cashier)
+                    <option value="{{ $cashier->id }}" {{ (int) $cashierId === $cashier->id ? 'selected' : '' }}>
+                        {{ $cashier->name }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
+    @endif
+</div>
+
             @endif
 
             {{-- Create Order --}}
