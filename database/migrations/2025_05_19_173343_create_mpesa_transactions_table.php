@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('phoneNumber')->nullable();
             $table->integer('amount')->nullable();
             $table->dateTime('transactionDate');
+            $table->string('payerName')->nullable();
             $table->timestamps();
 
             // Add foreign key constraint

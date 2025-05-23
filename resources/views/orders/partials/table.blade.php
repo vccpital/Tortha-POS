@@ -1,4 +1,7 @@
 {{-- resources/views/orders/partials/table.blade.php --}}
+@php
+    $user = Auth::user();
+@endphp
 <table class="table table-bordered table-striped">
     <thead>
         <tr>

@@ -21,7 +21,7 @@ public function index(Request $request)
 {
     $user = Auth::user();
     $filter = $request->get('filter'); // e.g., 'my' or 'all'
-    $cashierId = $request->get('cashier_id'); // New filter for admin
+    $cashierId = $request->get('user_id'); // New filter for admin
 
     if ($user->usertype === 'user') {
         // Regular users see only their orders
@@ -71,6 +71,13 @@ public function index(Request $request)
     return view('orders.index', compact('orders', 'cashiers', 'cashierId'));
 }
 
+
+public function edit(Order $order)
+{
+    return view('orders.edit', compact('order'));
+}
+
+
     public function show(Order $order) {
         $order->load(['items', 'cashier', 'customer']);
         return view('orders.show', compact('order'));
@@ -96,10 +103,21 @@ public function index(Request $request)
         return redirect()->route('orders.index')->with('success', 'Order created successfully.');
     }
 
-    public function update(Request $request, Order $order) {
-        $order->update($request->all());
-        return redirect()->route('orders.show', $order)->with('success', 'Order updated successfully.');
-    }
+
+
+public function update(Request $request, Order $order)
+{
+    $validated = $request->validate([
+        // validate other fields if needed
+        'status' => 'required|in:cart,pending,paid,cancelled,refunded',
+        'payment_status' => 'required|in:unpaid,partially_paid,paid',
+    ]);
+
+    $order->update($validated);
+
+    return redirect()->route('orders.show', $order)->with('success', 'Order updated successfully.');
+}
+
 
     public function destroy(Order $order) {
         $order->delete();

@@ -8,6 +8,7 @@ use App\Models\ProductImage;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -16,10 +17,22 @@ class ProductController extends Controller
         return view('products.create', compact('stores'));
     }
 
-    public function index() {
+public function index()
+{
+    $user = Auth::user();
+
+    // If the user is a cashier, only show products for their store
+    if ($user->usertype === 'cashier') {
+        $products = Product::with('images')
+            ->where('store_id', $user->store_id)
+            ->get();
+    } else {
+        // For all other user types, show all products
         $products = Product::with('images')->get();
-        return view('products.index', compact('products'));
     }
+
+    return view('products.index', compact('products'));
+}
 
     public function show(Product $product) {
         $product->load('images');

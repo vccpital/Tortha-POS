@@ -4,6 +4,9 @@
             {{ __('🛍️ Our Products') }}
         </h2>
     </x-slot>
+@php
+    $user = Auth::user();
+@endphp
 
     <div class="container py-5">
         @if (session('success'))
@@ -12,12 +15,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+@if (in_array(Auth::user()->usertype, ['admin', 'devadmin']))    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ route('products.create') }}" class="btn btn-gradient-primary shadow-sm px-4 py-2">
+            <i class="bi bi-plus-circle me-1"></i> Create Product
+        </a>
+    </div>
+@endif
 
-        <div class="d-flex justify-content-end mb-4">
-            <a href="{{ route('products.create') }}" class="btn btn-gradient-primary shadow-sm px-4 py-2">
-                <i class="bi bi-plus-circle me-1"></i> Create Product
-            </a>
-        </div>
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
             @forelse ($products as $product)

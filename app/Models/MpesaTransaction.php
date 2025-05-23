@@ -15,6 +15,7 @@ class MpesaTransaction extends Model
         'phoneNumber',
         'amount',
         'transactionDate',
+        'payername'
     ];
 
     protected $casts = [
