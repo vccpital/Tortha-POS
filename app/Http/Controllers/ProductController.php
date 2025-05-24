@@ -54,7 +54,7 @@ public function store(Request $request)
     $validated = $request->validate([
         'store_id'    => 'required|exists:stores,id',
         'name'        => 'required|string',
-        'descritpion'        => 'required|text',
+        'description' => 'required|string',
         'sku'         => 'required|string|unique:products',
         'barcode'     => 'required|string|unique:products',
         'category_id' => 'nullable|exists:categories,id',

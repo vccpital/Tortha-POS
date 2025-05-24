@@ -26,7 +26,9 @@
                         <p><strong>Barcode:</strong> {{ $product->barcode }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Category:</strong> {{ $product->category ?? '-' }}</p><p><strong>Category:</strong> {{ $product->category ?? '-' }}</p>v>
+                        <p><strong>Category:</strong> {{ $product->category->name ?? '-' }}</p>
+                    </div>
+
                     <div class="col-md-6">
                         <p>
                             <strong>Price:</strong> 
