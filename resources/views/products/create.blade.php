@@ -40,6 +40,12 @@
                                 <label for="name" class="form-label">Product Name</label>
                                 <input type="text" name="name" id="name" value="{{ old('name') }}" class="form-control" required>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea name="description" id="description" class="form-control" rows="4" required>{{ old('description') }}</textarea>
+                            </div>
+
 
                             <div class="mb-3">
                                 <label for="sku" class="form-label">SKU</label>
@@ -52,9 +58,17 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="category" class="form-label">Category</label>
-                                <input type="text" name="category" id="category" value="{{ old('category') }}" class="form-control">
+                                <label for="category_id" class="form-label">Category</label>
+                                <select name="category_id" id="category_id" class="form-select">
+                                    <option value="">Select Category</option>
+                                    @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
+
 
                             <div class="mb-3">
                                 <label for="price" class="form-label">Price (KSH)</label>
@@ -67,10 +81,10 @@
                             </div>
 
                                 <!-- Product Image -->
-    <div class="mb-3">
-        <label for="image" class="form-label">Product Image</label>
-        <input type="file" name="image" id="image" class="form-control" accept=".jpg,.jpeg,.png,.webp">
-    </div>
+                                 <div class="mb-3">
+                                    <label for="image" class="form-label">Product Image</label>
+                                    <input type="file" name="image" id="image" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+                                </div>
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Create Product</button>

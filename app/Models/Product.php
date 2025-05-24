@@ -12,9 +12,10 @@ class Product extends Model
     protected $fillable = [
         'store_id',
         'name',
+        'description',
         'sku',
         'barcode',
-        'category',
+        'category_id',
         'price',
         'stock_qty',
     ];
@@ -37,4 +38,9 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
 }

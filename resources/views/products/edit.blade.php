@@ -45,6 +45,11 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea name="description" id="description" class="form-control" rows="4" required>{{ old('description', $product->description) }}</textarea>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="sku" class="form-label">SKU</label>
                                 <input type="text" name="sku" id="sku" value="{{ old('sku', $product->sku) }}" class="form-control" required>
                             </div>
@@ -55,8 +60,16 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="category" class="form-label">Category</label>
-                                <input type="text" name="category" id="category" value="{{ old('category', $product->category) }}" class="form-control">
+                                <label for="category_id" class="form-label">Category</label>
+                                <select name="category_id" id="category_id" class="form-select">
+                                    <option value="">Select Category</option>
+                                    @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            
                             </div>
 
                             <div class="mb-3">

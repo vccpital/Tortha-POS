@@ -26,8 +26,7 @@
                         <p><strong>Barcode:</strong> {{ $product->barcode }}</p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Category:</strong> {{ $product->category ?? '-' }}</p>
-                    </div>
+                        <p><strong>Category:</strong> {{ $product->category ?? '-' }}</p><p><strong>Category:</strong> {{ $product->category ?? '-' }}</p>v>
                     <div class="col-md-6">
                         <p>
                             <strong>Price:</strong> 
@@ -44,6 +43,13 @@
                             </span>
                         </p>
                     </div>
+                    <div class="col-12">
+    <p><strong>Description:</strong></p>
+    <div class="border rounded p-3 bg-light text-dark-emphasis">
+        {{ $product->description ?? 'No description provided.' }}
+    </div>
+</div>
+
                 </div>
 
                 <div class="mt-5">

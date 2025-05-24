@@ -12,9 +12,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('store_id'); // FK defined separately
             $table->string('name');
+            $table->text('description');
             $table->string('sku')->unique();
             $table->string('barcode')->unique();
-            $table->string('category')->nullable();
+            $table->unsignedBigInteger('category_id')->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('stock_qty')->default(0);
             $table->timestamps();

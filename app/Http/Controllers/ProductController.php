@@ -14,7 +14,8 @@ class ProductController extends Controller
 {
     public function create() {
         $stores = Store::all();
-        return view('products.create', compact('stores'));
+        $categories = \App\Models\Category::all();
+        return view('products.create', compact('stores', 'categories'));
     }
 
 public function index()
@@ -42,9 +43,10 @@ public function index()
     public function edit(Product $product)
     {
         $stores = Store::all();
+        $categories = \App\Models\Category::all();
         $product->load('images');
 
-        return view('products.edit', compact('product', 'stores'));
+        return view('products.edit', compact('product', 'stores', 'categories'));
     }
 
 public function store(Request $request)
@@ -52,9 +54,10 @@ public function store(Request $request)
     $validated = $request->validate([
         'store_id'    => 'required|exists:stores,id',
         'name'        => 'required|string',
+        'descritpion'        => 'required|text',
         'sku'         => 'required|string|unique:products',
         'barcode'     => 'required|string|unique:products',
-        'category'    => 'nullable|string',
+        'category_id' => 'nullable|exists:categories,id',
         'price'       => 'required|numeric',
         'stock_qty'   => 'integer',
         'image'       => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
@@ -121,9 +124,10 @@ public function update(Request $request, Product $product)
     $validated = $request->validate([
         'store_id'    => 'required|exists:stores,id',
         'name'        => 'required|string',
+        'descritpion'        => 'required|text',
         'sku'         => 'required|string|unique:products,sku,' . $product->id,
         'barcode'     => 'required|string|unique:products,barcode,' . $product->id,
-        'category'    => 'nullable|string',
+        'category_id' => 'nullable|exists:categories,id',
         'price'       => 'required|numeric',
         'stock_qty'   => 'integer',
         'image'       => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
