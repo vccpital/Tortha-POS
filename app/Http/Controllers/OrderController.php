@@ -214,17 +214,6 @@ public function callback(Request $request)
             $order->status = 'paid';
             $order->payment_status = 'paid';
             $order->save();
-            // Reduce stock
-
-            foreach ($order->items as $item) {
-                $product = $item->product;
-                if ($product && $product->stock_qty >= $item->quantity) {
-                    $product->decrement('stock_qty', $item->quantity);
-                    Log::info("🛒 Stock reduced for product ID {$product->id}: -{$item->quantity}");
-                } else {
-                    Log::warning("⚠️ Not enough stock for product ID {$product->id} or product not found.");
-                }
-            }
 
             Log::info('✅ Order marked as paid', [
                 'order_id' => $order->id,

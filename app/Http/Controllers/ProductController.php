@@ -124,7 +124,7 @@ public function update(Request $request, Product $product)
     $validated = $request->validate([
         'store_id'    => 'required|exists:stores,id',
         'name'        => 'required|string',
-        'descritpion'        => 'required|text',
+        'description' => 'required|string',
         'sku'         => 'required|string|unique:products,sku,' . $product->id,
         'barcode'     => 'required|string|unique:products,barcode,' . $product->id,
         'category_id' => 'nullable|exists:categories,id',
