@@ -26,6 +26,9 @@
                     <x-nav-link :href="route('mpesa_transactions.index')" :active="request()->routeIs('mpesa_transactions.*')">
                         {{ __('Transactions') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                        {{ __('Categories') }}
+                    </x-nav-link>
                     @endif
                     <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                         {{ __('Products') }}
@@ -105,7 +108,9 @@
             <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                 {{ __('Users') }}
             </x-responsive-nav-link>
-            
+            <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.*')">
+                {{ __('Categories') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('stores.index')" :active="request()->routeIs('stores.*')">
                 {{ __('Stores') }}
             </x-responsive-nav-link>

@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MpesaTransactionController;
 
 
@@ -30,6 +31,7 @@ Route::middleware(['auth'])->group(function () {
     // Resource routes
     Route::resource('users', UserController::class);
     Route::resource('stores', StoreController::class);
+    Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
     Route::resource('product-images', ProductImageController::class)->only(['store', 'destroy']);
     Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
