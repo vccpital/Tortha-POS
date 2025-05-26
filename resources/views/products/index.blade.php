@@ -108,14 +108,15 @@
     .swiper-button-prev {
         display: none;
     }
-@media (max-width: 768px) {
+
     #filterFormCollapse.collapsing {
         height: auto !important;
         display: block !important;
         visibility: visible !important;
+        overflow: visible !important;
     }
 }
-}
+
 
     </style>
 
