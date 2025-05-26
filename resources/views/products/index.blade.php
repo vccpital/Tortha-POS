@@ -151,7 +151,10 @@
         </div>
 
         {{-- Filter Form (responsive) --}}
-        <div class="collapse" id="filterFormCollapse">
+        @php
+        $isFilterActive = request('category') || request('search') || request('min_price') || request('max_price') || request('in_stock');
+        @endphp
+        <div class="collapse {{ $isFilterActive ? 'show' : '' }}" id="filterFormCollapse">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
                     <form method="GET" action="{{ route('products.index') }}">
