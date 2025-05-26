@@ -84,14 +84,6 @@
                 display: none;
             }
         }
-        @media (min-width: 768px) {
-            #filterFormCollapse {
-                display: block !important;
-                visibility: visible !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-        }
 
         @media (max-width: 767.98px) {
             .sticky-filter-btn {
@@ -102,19 +94,7 @@
                 padding: 0.5rem 1rem;
                 border-bottom: 1px solid #eee;
             }
-        }
-@media (max-width: 768px) {
-    .swiper-button-next,
-    .swiper-button-prev {
-        display: none;
-    }
 
-    #filterFormCollapse.collapsing {
-        height: auto !important;
-        display: block !important;
-        visibility: visible !important;
-        overflow: visible !important;
-    }
 }
 
 
@@ -151,10 +131,7 @@
         </div>
 
         {{-- Filter Form (responsive) --}}
-        @php
-        $isFilterActive = request('category') || request('search') || request('min_price') || request('max_price') || request('in_stock');
-        @endphp
-        <div class="collapse {{ $isFilterActive ? 'show' : '' }}" id="filterFormCollapse">
+        <div class="collapse" id="filterFormCollapse">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
                     <form method="GET" action="{{ route('products.index') }}">
