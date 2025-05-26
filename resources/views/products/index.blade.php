@@ -1,10 +1,9 @@
 <x-app-layout>
-    
-<script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-        {{-- Custom Styles --}}
+    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+    {{-- Custom Styles --}}
     <style>
         /* Your existing styles here... */
- .product-card {
+        .product-card {
             transition: all 0.3s ease;
             border: 1px solid #e9ecef;
             background: #fff;
@@ -94,10 +93,17 @@
                 padding: 0.5rem 1rem;
                 border-bottom: 1px solid #eee;
             }
+        }
 
-}
-
-
+        /* Show filter always on md+ */
+        @media (min-width: 768px) {
+            #filterFormCollapse {
+                display: block !important;
+                visibility: visible !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+        }
     </style>
 
     <x-slot name="header">
@@ -106,9 +112,9 @@
                 {{ __('🛍️ Our Products') }}
             </h2>
             @if (in_array(Auth::user()->usertype, ['admin', 'devadmin']))
-        <a href="{{ route('products.create') }}" class="btn btn-sm btn-light shadow-sm px-4 py-2">
-            <i class="bi bi-plus-circle me-1"></i> Create Product
-        </a>
+                <a href="{{ route('products.create') }}" class="btn btn-sm btn-light shadow-sm px-4 py-2">
+                    <i class="bi bi-plus-circle me-1"></i> Create Product
+                </a>
             @endif
         </div>
     </x-slot>
@@ -125,7 +131,7 @@
 
         {{-- Mobile Filter Toggle --}}
         <div class="d-md-none mb-3 text-end">
-            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterFormCollapse">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterFormCollapse" aria-expanded="false" aria-controls="filterFormCollapse">
                 <i class="bi bi-sliders"></i> Filters
             </button>
         </div>
@@ -152,29 +158,25 @@
                             {{-- Search --}}
                             <div class="col-sm-6 col-md-3">
                                 <label for="search" class="form-label fw-semibold">🔍 Search</label>
-                                <input type="text" name="search" id="search" class="form-control form-control-sm"
-                                       placeholder="Product name..." value="{{ request('search') }}">
+                                <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="Product name..." value="{{ request('search') }}">
                             </div>
 
                             {{-- Min Price --}}
                             <div class="col-6 col-md-2">
                                 <label for="min_price" class="form-label fw-semibold">💰 Min</label>
-                                <input type="number" name="min_price" id="min_price" class="form-control form-control-sm"
-                                       placeholder="0.00" value="{{ request('min_price') }}" min="0" step="0.01">
+                                <input type="number" name="min_price" id="min_price" class="form-control form-control-sm" placeholder="0.00" value="{{ request('min_price') }}" min="0" step="0.01">
                             </div>
 
                             {{-- Max Price --}}
                             <div class="col-6 col-md-2">
                                 <label for="max_price" class="form-label fw-semibold">💸 Max</label>
-                                <input type="number" name="max_price" id="max_price" class="form-control form-control-sm"
-                                       placeholder="0.00" value="{{ request('max_price') }}" min="0" step="0.01">
+                                <input type="number" name="max_price" id="max_price" class="form-control form-control-sm" placeholder="0.00" value="{{ request('max_price') }}" min="0" step="0.01">
                             </div>
 
                             {{-- In Stock --}}
                             <div class="col-6 col-md-1 text-start text-md-center">
                                 <div class="form-check form-switch mt-4">
-                                    <input class="form-check-input" type="checkbox" name="in_stock" id="in_stock"
-                                           {{ request('in_stock') ? 'checked' : '' }} onchange="this.form.submit()">
+                                    <input class="form-check-input" type="checkbox" name="in_stock" id="in_stock" {{ request('in_stock') ? 'checked' : '' }} onchange="this.form.submit()">
                                     <label class="form-check-label small" for="in_stock">In Stock</label>
                                 </div>
                             </div>
@@ -192,111 +194,104 @@
         </div>
 
         {{-- Product Grid --}}
-@foreach ($products as $categoryId => $categoryProducts)
-    @php
-        $category = $categories->firstWhere('id', $categoryId);
-    @endphp
+        @foreach ($products as $categoryId => $categoryProducts)
+            @php
+                $category = $categories->firstWhere('id', $categoryId);
+            @endphp
 
-    <div class="mb-5">
-        <h4 class="fw-bold text-primary mb-3">{{ $category->name }}</h4>
+            <div class="mb-5">
+                <h4 class="fw-bold text-primary mb-3">{{ $category->name }}</h4>
 
-        <div class="swiper-container swiper-{{ $categoryId }}">
-            <div class="swiper-wrapper">
-                @foreach ($categoryProducts as $product)
-                    <div class="swiper-slide" style="width: 300px;">
-                        <div class="card h-100 border-0 shadow-lg rounded-4 product-card">
-                            <!-- Product Image with Overlay Buttons -->
-                            <div class="position-relative text-center p-3" style="background: #f8f9fa;">
-                                <!-- Overlay Buttons -->
-                                 <div class="position-absolute top-0 end-0 m-2 d-flex gap-1 z-2">
-                                    <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info rounded-circle" title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-warning rounded-circle" title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
+                <div class="swiper-container swiper-{{ $categoryId }}">
+                    <div class="swiper-wrapper">
+                        @foreach ($categoryProducts as $product)
+                            <div class="swiper-slide" style="width: 300px;">
+                                <div class="card h-100 border-0 shadow-lg rounded-4 product-card">
+                                    <!-- Product Image with Overlay Buttons -->
+                                    <div class="position-relative text-center p-3" style="background: #f8f9fa;">
+                                        <!-- Overlay Buttons -->
+                                        <div class="position-absolute top-0 end-0 m-2 d-flex gap-1 z-2">
+                                            <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-info rounded-circle" title="View">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-warning rounded-circle" title="Edit">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        </div>
+                                        <!-- Product Image -->
+                                        <img src="{{ $product->images->first()->image_url ?? 'https://via.placeholder.com/150' }}" alt="{{ $product->name }}" class="img-fluid rounded-3 object-fit-contain" style="max-height: 180px;" loading="lazy">
+                                    </div>
+
+                                    <div class="card-body d-flex flex-column justify-content-between">
+                                        <div>
+                                            <h5 class="fw-semibold text-dark">{{ $product->name }}</h5>
+                                            <p class="text-muted mb-1">KSH {{ number_format($product->price, 2) }}</p>
+                                            <small class="text-secondary">Stock: {{ $product->stock_qty }}</small>
+                                        </div>
+
+                                        <form action="{{ route('cart.add') }}" method="POST" class="mt-3 d-flex align-items-center gap-2">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                            <input type="number" name="quantity" value="1" min="1" max="{{ $product->stock_qty }}" class="form-control form-control-sm w-25 text-center shadow-sm" aria-label="Quantity">
+                                            <button class="btn btn-success btn-sm shadow-sm">
+                                                <i class="bi bi-cart-plus me-1"></i> Add
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <!-- Product Image -->
-                                 <img src="{{ $product->images->first()->image_url ?? 'https://via.placeholder.com/150' }}"alt="{{ $product->name }}"class="img-fluid rounded-3 object-fit-contain"style="max-height: 180px;" loading="lazy">
-                                </div>
-
-
-                            <div class="card-body d-flex flex-column justify-content-between">
-                                <div>
-                                    <h5 class="fw-semibold text-dark">{{ $product->name }}</h5>
-                                    <p class="text-muted mb-1">KSH {{ number_format($product->price, 2) }}</p>
-                                    <small class="text-secondary">Stock: {{ $product->stock_qty }}</small>
-                                </div>
-
-                                <form action="{{ route('cart.add') }}" method="POST" class="mt-3 d-flex align-items-center gap-2">
-                                    @csrf
-                                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                    <input type="number" name="quantity" value="1" min="1"
-                                           max="{{ $product->stock_qty }}"
-                                           class="form-control form-control-sm w-25 text-center shadow-sm"
-                                           aria-label="Quantity">
-                                    <button class="btn btn-success btn-sm shadow-sm">
-                                        <i class="bi bi-cart-plus me-1"></i> Add
-                                    </button>
-                                </form>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                @endforeach
+
+                    <!-- Add navigation buttons -->
+                    <div class="swiper-button-next swiper-button-next-{{ $categoryId }}"></div>
+                    <div class="swiper-button-prev swiper-button-prev-{{ $categoryId }}"></div>
+                </div>
             </div>
 
-            <!-- Add navigation buttons -->
-            <div class="swiper-button-next swiper-button-next-{{ $categoryId }}"></div>
-            <div class="swiper-button-prev swiper-button-prev-{{ $categoryId }}"></div>
-        </div>
-    </div>
-
-<script>
-    new Swiper('.swiper-{{ $categoryId }}', {
-        slidesPerView: 1,
-        spaceBetween: 20,
-        navigation: {
-            nextEl: '.swiper-button-next-{{ $categoryId }}',
-            prevEl: '.swiper-button-prev-{{ $categoryId }}',
-        },
-        autoplay: {
-            delay: 3000, // time in milliseconds
-            disableOnInteraction: false // keep autoplay even after user interaction
-        },
-        breakpoints: {
-            
-            0: { slidesPerView: 2 },
-            768: { slidesPerView: 2 },
-            992: { slidesPerView: 3 },
-            1200: { slidesPerView: 4 },
-        },
-        loop: true // Optional: loop slides
-    });
-</script>
-
-@endforeach
-
+            <script>
+                new Swiper('.swiper-{{ $categoryId }}', {
+                    slidesPerView: 1,
+                    spaceBetween: 20,
+                    navigation: {
+                        nextEl: '.swiper-button-next-{{ $categoryId }}',
+                        prevEl: '.swiper-button-prev-{{ $categoryId }}',
+                    },
+                    autoplay: {
+                        delay: 3000, // time in milliseconds
+                        disableOnInteraction: false // keep autoplay even after user interaction
+                    },
+                    breakpoints: {
+                        0: { slidesPerView: 2 },
+                        768: { slidesPerView: 2 },
+                        992: { slidesPerView: 3 },
+                        1200: { slidesPerView: 4 },
+                    },
+                    loop: true // Optional: loop slides
+                });
+            </script>
+        @endforeach
     </div>
 
     {{-- JS to auto-hide filter on mobile submit --}}
-<script>
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            const collapse = document.getElementById('filterFormCollapse');
+    <script>
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                const collapse = document.getElementById('filterFormCollapse');
 
-            if (window.innerWidth < 768 && collapse && collapse.classList.contains('show')) {
-                e.preventDefault(); // Stop default submit temporarily
-                const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapse);
-                bsCollapse.hide();
+                if (window.innerWidth < 768 && collapse && collapse.classList.contains('show')) {
+                    e.preventDefault(); // Stop default submit temporarily
+                    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapse);
+                    bsCollapse.hide();
 
-                // Submit after collapse animation
-                setTimeout(() => {
-                    form.submit();
-                }, 400);
-            }
+                    // Submit after collapse animation
+                    setTimeout(() => {
+                        form.submit();
+                    }, 400);
+                }
+            });
         });
-    });
-</script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
+    </script>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
 </x-app-layout>
