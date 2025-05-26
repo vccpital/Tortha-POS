@@ -84,6 +84,14 @@
                 display: none;
             }
         }
+        @media (min-width: 768px) {
+            #filterFormCollapse {
+                display: block !important;
+                visibility: visible !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+        }
 
         @media (max-width: 767.98px) {
             .sticky-filter-btn {
@@ -94,7 +102,12 @@
                 padding: 0.5rem 1rem;
                 border-bottom: 1px solid #eee;
             }
-
+        }
+@media (max-width: 768px) {
+    .swiper-button-next,
+    .swiper-button-prev {
+        display: none;
+    }
 }
 
 
