@@ -6,6 +6,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Models\MpesaTransaction;
 use App\Services\MpesaService;
 use Illuminate\Support\Facades\Auth;
@@ -103,20 +104,43 @@ public function edit(Order $order)
         return redirect()->route('orders.index')->with('success', 'Order created successfully.');
     }
 
-
-
 public function update(Request $request, Order $order)
 {
     $validated = $request->validate([
-        // validate other fields if needed
         'status' => 'required|in:cart,pending,paid,cancelled,refunded',
         'payment_status' => 'required|in:unpaid,partially_paid,paid',
     ]);
 
-    $order->update($validated);
+    $wasPreviouslyUnpaid = $order->payment_status !== 'paid' && $validated['payment_status'] === 'paid';
 
-    return redirect()->route('orders.show', $order)->with('success', 'Order updated successfully.');
+    DB::transaction(function () use ($order, $validated, $wasPreviouslyUnpaid) {
+        $order->update($validated);
+
+        if ($wasPreviouslyUnpaid) {
+            foreach ($order->items as $item) {
+                $product = $item->product;
+
+                if ($product && $product->stock_qty >= $item->quantity) {
+                    $product->decrement('stock_qty', $item->quantity);
+                }
+            }
+        }
+    });
+
+    // Recalculate the balance AFTER update
+    $order->refresh(); // Make sure we have the latest data
+    $amountPaid = $order->mpesaTransactions()->sum('amount');
+    $balance = $order->total - $amountPaid;
+
+    $message = 'Order updated successfully.';
+    if ($validated['payment_status'] === 'partially_paid') {
+        $message .= " Remaining balance: KES " . number_format($balance, 2);
+    }
+
+    return redirect()->route('orders.show', $order)->with('success', $message);
 }
+
+
 
 
     public function destroy(Order $order) {
@@ -211,14 +235,10 @@ public function callback(Request $request)
     if ((int) $resultCode === 0) {
         if ($transaction->order) {
             $order = $transaction->order;
-            $order->status = 'paid';
-            $order->payment_status = 'paid';
             $order->save();
 
             Log::info('✅ Order marked as paid', [
                 'order_id' => $order->id,
-                'status' => $order->status,
-                'payment_status' => $order->payment_status
             ]);
         } else {
             Log::warning('⚠️ Payment received but no order linked to transaction ID ' . $transaction->id);

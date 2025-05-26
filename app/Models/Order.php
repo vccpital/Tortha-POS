@@ -50,5 +50,15 @@ class Order extends Model
     {
         return $this->hasMany(MpesaTransaction::class);
     }
+    public function getAmountPaidAttribute()
+    {
+        return $this->mpesaTransactions()->sum('amount');
+    }
+    
+    public function getBalanceAttribute()
+    {
+        return $this->total - $this->amount_paid;
+    }
+
 
 }

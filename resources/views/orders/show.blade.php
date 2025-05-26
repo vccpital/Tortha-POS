@@ -72,6 +72,13 @@
                         </table>
                     </div>
                 @endif
+                @if ($order->payment_status === 'partially_paid')
+    <div class="alert alert-warning">
+        <strong>Partial Payment:</strong> KES {{ number_format($order->amount_paid, 2) }} paid.<br>
+        <strong>Remaining Balance:</strong> KES {{ number_format($order->balance, 2) }}
+    </div>
+@endif
+
             </div>
         </div>
 @if(session('scan_token'))

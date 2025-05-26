@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Store;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -18,21 +19,48 @@ class ProductController extends Controller
         return view('products.create', compact('stores', 'categories'));
     }
 
-public function index()
+public function index(Request $request)
 {
     $user = Auth::user();
+    $categoryId = $request->input('category');
+    $search = $request->input('search');
+    $minPrice = $request->input('min_price');
+    $maxPrice = $request->input('max_price');
+    $inStock = $request->input('in_stock');
 
-    // If the user is a cashier, only show products for their store
+    $query = Product::with('images');
+
     if ($user->usertype === 'cashier') {
-        $products = Product::with('images')
-            ->where('store_id', $user->store_id)
-            ->get();
-    } else {
-        // For all other user types, show all products
-        $products = Product::with('images')->get();
+        $query->where('store_id', $user->store_id);
     }
 
-    return view('products.index', compact('products'));
+    if ($categoryId) {
+        $query->where('category_id', $categoryId);
+    }
+
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
+    }
+
+    if ($minPrice !== null) {
+        $query->where('price', '>=', $minPrice);
+    }
+
+    if ($maxPrice !== null) {
+        $query->where('price', '<=', $maxPrice);
+    }
+
+    if ($inStock) {
+        $query->where('stock_qty', '>', 0);
+    }
+
+    $products = $query->orderBy('created_at', 'desc')->get()->groupBy('category_id');
+    $categories = Category::all();
+
+    return view('products.index', compact('products', 'categories'));
 }
 
     public function show(Product $product) {
