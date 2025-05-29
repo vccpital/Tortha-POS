@@ -249,19 +249,44 @@ public function callback(Request $request)
 
     return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success'], 200);
 }
+
 public function markAsPaid(Order $order)
 {
-    // Only allow if not already paid
     if ($order->payment_status === 'paid') {
         return redirect()->route('orders.index')->with('error', 'Order is already marked as paid.');
     }
 
-    $order->update([
-        'payment_status' => 'paid',
-    ]);
+    // First, validate stock levels for all items
+    foreach ($order->items as $item) {
+        $product = $item->product;
 
-    return redirect()->route('orders.index')->with('success', "Order #{$order->id} marked as paid.");
+        if (!$product) {
+            return redirect()->route('orders.index')->with('error', "Product not found for item ID {$item->id}.");
+        }
+
+        if ($product->stock_qty < $item->quantity) {
+            return redirect()->route('orders.index')->with('error', "Insufficient stock for product: {$product->name}. Required: {$item->quantity}, Available: {$product->stock_qty}");
+        }
+    }
+
+    // Proceed with payment status update and stock deduction
+    DB::transaction(function () use ($order) {
+        $order->update([
+            'payment_status' => 'paid',
+        ]);
+
+        foreach ($order->items as $item) {
+            $product = $item->product;
+
+            if ($product) {
+                $product->decrement('stock_qty', $item->quantity);
+            }
+        }
+    });
+
+    return redirect()->route('orders.index')->with('success', "Order #{$order->id} marked as paid and stock updated.");
 }
+
 
 public function export(Request $request)
 {
