@@ -38,14 +38,25 @@ class UserController extends Controller
         }
 
         // For other user types, redirect or show message
-        return redirect()->route('home')->with('error', 'Unauthorized access');
+        return redirect()->route('dashboard')->with('error', 'Unauthorized access');
     }
     
-    public function edit(User $user)
-    {
-        $stores = Store::all();
-        return view('users.edit', compact('user', 'stores'));
+public function edit(User $user)
+{
+    // Get the currently authenticated user
+    $authUser = Auth::user();
+
+    // Check usertype
+    if (!in_array($authUser->usertype, ['devadmin', 'admin'])) {
+        // Redirect with error message if unauthorized
+        return redirect()->route('dashboard')->with('error', 'You do not have permission to access this page.');
     }
+
+    // Authorized, load stores and show the edit view
+    $stores = Store::all();
+    return view('users.edit', compact('user', 'stores'));
+}
+
 
     // Show single user details page (you can create the view)
     public function show(User $user)

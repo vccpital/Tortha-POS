@@ -13,7 +13,6 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MpesaTransactionController;
 
-
 Route::get('/', function () {
     return view('welcome');
 });
@@ -34,20 +33,22 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
     Route::resource('product-images', ProductImageController::class)->only(['store', 'destroy']);
+
+    // Order routes
     Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+    Route::patch('/orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('orders.markPaid'); // ✅ Added Route
+    Route::get('/orders/{order}/pay', [OrderController::class, 'showPaymentForm'])->name('orders.showPaymentForm');
+    Route::post('/order/{order}/payment', [OrderController::class, 'payment'])->name('orders.payment');
+    Route::post('/order/payment/callback', [OrderController::class, 'callback'])->name('orders.payment.callback');
+    Route::post('/mpesa/callback', [OrderController::class, 'callback'])->name('stk.callback');
     Route::resource('orders', OrderController::class);
     Route::resource('order-items', OrderItemController::class);
-    // Payment Route
-    Route::post('/order/{order}/payment', [OrderController::class, 'payment'])->name('orders.payment');
-    // Callback Route (This is the URL where Safaricom sends the response after payment)
-    Route::post('/order/payment/callback', [OrderController::class, 'callback'])->name('orders.payment.callback');
-    Route::get('/orders/{order}/pay', [OrderController::class, 'showPaymentForm'])->name('orders.showPaymentForm');
-    Route::post('/mpesa/callback', [OrderController::class, 'callback'])->name('stk.callback');
 
+    // Other resources
     Route::resource('scans', ScanController::class);
     Route::resource('mpesa_transactions', MpesaTransactionController::class);
-});
-Route::middleware(['auth'])->group(function () {
+
+    // Cart routes
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'addProduct'])->name('cart.add');
     Route::post('/cart/remove/{item}', [CartController::class, 'remove'])->name('cart.remove');

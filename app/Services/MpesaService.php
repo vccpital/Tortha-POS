@@ -17,11 +17,11 @@ class MpesaService
 
     public function __construct()
     {
-        $this->consumerKey = env('MPESA_CONSUMER_KEY') ?? 'HDneqBCVa3PAJTTeTTY85tWtQ7D8o4kdHCws8Ap2CPrAtOfA';
-        $this->consumerSecret = env('MPESA_CONSUMER_SECRET') ?? 'OxAI6eXA8ek3gxHzQfADAQ8xAiDtODgAY5H8rBHsZqW0S1pXGOAlLfpXVkwfrD3c';
-        $this->shortcode = env('MPESA_SHORTCODE') ?? '174379';
-        $this->passkey = env('MPESA_PASSKEY', 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919');
-        $this->callbackUrl = env('MPESA_CALLBACK_URL', 'tortha-pos-main-in9aaq.laravel.cloud');
+        $this->consumerKey = env('MPESA_CONSUMER_KEY');
+        $this->consumerSecret = env('MPESA_CONSUMER_SECRET');
+        $this->shortcode = env('MPESA_SHORTCODE');
+        $this->passkey = env('MPESA_PASSKEY');
+        $this->callbackUrl = env('MPESA_CALLBACK_URL');
 
 
         if (!$this->consumerKey || !$this->consumerSecret) {

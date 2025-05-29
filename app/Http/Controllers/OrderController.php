@@ -249,6 +249,19 @@ public function callback(Request $request)
 
     return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success'], 200);
 }
+public function markAsPaid(Order $order)
+{
+    // Only allow if not already paid
+    if ($order->payment_status === 'paid') {
+        return redirect()->route('orders.index')->with('error', 'Order is already marked as paid.');
+    }
+
+    $order->update([
+        'payment_status' => 'paid',
+    ]);
+
+    return redirect()->route('orders.index')->with('success', "Order #{$order->id} marked as paid.");
+}
 
 public function export(Request $request)
 {

@@ -6,11 +6,25 @@
     </x-slot>
 
     <div class="container py-5">
-        <div class="mb-4">
-            <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary shadow-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back to Orders
-            </a>
-        </div>
+<div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <!-- Left: Back Button -->
+    <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary shadow-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Orders
+    </a>
+
+    @if($order->payment_status !== 'paid' && in_array(Auth::user()->usertype, ['admin', 'devadmin', 'cashier']))
+        <!-- Right: Mark as Paid Button -->
+        <form action="{{ route('orders.markPaid', $order) }}" method="POST" 
+              onsubmit="return confirm('Are you sure you want to mark this order as paid?');">
+            @csrf
+            @method('PATCH')
+            <button type="submit" class="btn btn-primary shadow-sm">
+                <i class="bi bi-check-circle me-1"></i> Mark as Paid
+            </button>
+        </form>
+    @endif
+</div>
+
 
         <div class="card border-0 shadow-sm rounded-4 mb-5">
             <div class="card-body">
