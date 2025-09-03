@@ -51,9 +51,12 @@
                                         <option value="user" {{ old('usertype') == 'user' ? 'selected' : '' }}>User</option>
                                         <option value="cashier" {{ old('usertype') == 'cashier' ? 'selected' : '' }}>Cashier</option>
                                         <option value="admin" {{ old('usertype') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                        @if (Auth::user()->usertype !== 'admin')
                                         <option value="devadmin" {{ old('usertype') == 'devadmin' ? 'selected' : '' }}>Dev Admin</option>
+                                        @endif
                                     </select>
                                 </div>
+
 
                                 <div class="mb-3" id="store-id-field">
                                     <label for="store_id" class="form-label">Select Store</label>
