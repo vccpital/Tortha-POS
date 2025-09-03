@@ -29,9 +29,6 @@
             <x-input-label for="usertype" :value="__('User Type')" />
             <select name="usertype" id="usertype" class="block mt-1 w-full" required>
                 <option value="user" {{ old('usertype') == 'user' ? 'selected' : '' }}>User</option>
-                <option value="cashier" {{ old('usertype') == 'cashier' ? 'selected' : '' }}>Cashier</option>
-                <option value="admin" {{ old('usertype') == 'admin' ? 'selected' : '' }}>Admin</option>
-                <option value="devadmin" {{ old('usertype') == 'devadmin' ? 'selected' : '' }}>Dev Admin</option>
             </select>
             <x-input-error :messages="$errors->get('usertype')" class="mt-2" />
         </div>
