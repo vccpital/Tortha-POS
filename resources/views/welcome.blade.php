@@ -153,14 +153,16 @@
 
             <div class="d-flex justify-content-between align-items-center">
                 <a class=" nav-link me-2" href="/dashboard">Home</a>
-            <a class="nav-link" href="/login">| Login</a>
+                <a class="nav-link" href="/login">| Login</a>
+                <a class="nav-link" href="/register">| Register</a>
             </div>
     </nav>
   <!-- Hero Section -->
   <div class="container-fluid hero">
     <h1>Welcome to Tortha Universal Retail POS</h1>
     <p class="mb-5">Running multiple stores is tough. Tortha POS makes it less stressful, more delightful, and dare we say... even fun? 🧾✨</p>
-    <a href="{{ route('login') }}" class="btn btn-primary me-2" title="Welcome back! Let’s do this.">Login</a>
+      <a href="{{ route('login') }}" class="btn btn-primary me-2" title="Welcome back! Let’s do this.">Login</a>
+      <a href="{{ route('register') }}" class="btn btn-primary me-2" title="Welcome back! Let’s do this.">Register</a>
     <a href="https://wa.me/254716878433?text=Hello%20Tortha%20Team,%20I%27m%20interested%20in%20your%20POS%20system." class="btn btn-outline-secondary" title="Let’s build your POS empire."><i class="fab fa-whatsapp"></i> Get Started</a>
   </div>
 
