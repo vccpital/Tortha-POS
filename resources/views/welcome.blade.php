@@ -154,6 +154,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <a class=" nav-link me-2" href="/dashboard">Home</a>
                 <a class="nav-link" href="/login">| Login</a>
+                <a class="nav-link" href="/login">| Register</a>
             </div>
     </nav>
   <!-- Hero Section -->
